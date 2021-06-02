@@ -11,15 +11,15 @@ if (!require("rjson")) {install.packages(rjson)}
 simpleR_internal_stmt_msg <- 0
 simpleR_internal_expr_msg <- 1
 simpleR_internal_assn_msg <- 2
+simpleR_internal_expr_stringified_msg <- 3
 
 # Out
 simpleR_internal_succ_msg <- 0
 simpleR_internal_err_msg <- 1
 
-simpleR_internal_assn_tmp <- NA
-
 simpleR_internal_eval_wrapper <- function(s) {
   eval(parse(text=s), envir=globalenv())
+  ## Double check that the environment stuff works how I think it does
 }
 
 simpleR_internal_send_error <- function(sock, message, cause) {
@@ -38,6 +38,13 @@ simpleR_internal_handle_statememt <- function(sock, body) {
 
 simpleR_internal_handle_expression <- function(sock, body) {
   res <- simpleR_internal_eval_wrapper(body)
+  out_msg <- list(type = simpleR_internal_succ_msg,
+                  body = res)
+  writeLines(toJSON(out_msg), sock)
+}
+
+simpleR_internal_handle_expression_stringified <- function(sock, body){
+  res <- toString(simpleR_internal_eval_wrapper(body))
   out_msg <- list(type = simpleR_internal_succ_msg,
                   body = res)
   writeLines(toJSON(out_msg), sock)
@@ -81,6 +88,8 @@ simpleR_internal_server <- function(){
         simpleR_internal_handle_expression(sock, msg_parsed$body)
       } else if (msg_type == simpleR_internal_assn_msg) {
         simpleR_internal_handle_assignment(sock, msg_parsed$body)
+      } else if (msg_type == simpleR_internal_expr_stringified_msg) {
+        simpleR_internal_handle_expression_stringified(sock, msg_parsed$body)
       } else {
         simpleR_internal_send_error("Bad message type" + toString(msg_type), "")
       }

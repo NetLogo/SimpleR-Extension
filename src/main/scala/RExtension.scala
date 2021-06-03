@@ -4,14 +4,11 @@ import com.fasterxml.jackson.core.JsonParser
 import org.json4s.jackson.JsonMethods.mapper
 import org.me.Subprocess
 import org.nlogo.api
+import org.nlogo.api._
 import org.nlogo.core.Syntax
-import org.nlogo.core.Syntax._
-import org.nlogo.api.{Argument, Context, DefaultClassManager, ExtensionException, ExtensionManager, LogoException, PrimitiveManager, Reporter}
-import org.nlogo.api.ScalaConversions._
 
 import java.io.File
 import java.net.ServerSocket
-import scala.util.Random
 
 object RExtension {
   private var _rProcess: Option[Subprocess] = None

@@ -1,4 +1,4 @@
-if (!require("rjson")) {install.packages(rjson)}
+if (!suppressPackageStartupMessages(require("rjson"))) {suppressPackageStartupMessages(install.packages(rjson))}
 
 ## The only way I was able to find to let the user create new variables and
 ## then use them in a different command is to have the eval() interact
@@ -79,8 +79,6 @@ simpleR_internal_server <- function(){
 
       msg_parsed <- fromJSON(json_str=msg_line, simplify=FALSE)
       msg_type <- msg_parsed$type
-
-      writeLines(toString(msg_parsed))
 
       if (msg_type == simpleR_internal_stmt_msg) {
         simpleR_internal_handle_statememt(sock, msg_parsed$body)

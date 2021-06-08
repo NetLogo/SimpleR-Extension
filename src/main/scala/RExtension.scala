@@ -2,16 +2,20 @@ package org.nlogo.extensions.simpleR
 
 import com.fasterxml.jackson.core.JsonParser
 import org.json4s.jackson.JsonMethods.mapper
-import org.me.Subprocess
+import org.me.{ShellWindow, Subprocess}
 import org.nlogo.api
 import org.nlogo.api._
+import org.nlogo.app.App
 import org.nlogo.core.Syntax
 
+import java.awt.{GraphicsEnvironment, MenuBar}
 import java.io.File
 import java.net.ServerSocket
+import javax.swing.JMenu
 
 object RExtension {
   private var _rProcess: Option[Subprocess] = None
+  var shellWindow = new ShellWindow()
 
   val extDirectory: File = new File(
     getClass.getClassLoader.asInstanceOf[java.net.URLClassLoader].getURLs()(0).toURI.getPath
@@ -34,6 +38,8 @@ object RExtension {
 }
 
 class RExtension extends DefaultClassManager {
+  var extensionMenu: Option[JMenu] = None
+
   def load(manager: PrimitiveManager): Unit = {
     manager.addPrimitive("setup", SetupR)
     manager.addPrimitive("run", Run)
@@ -44,11 +50,25 @@ class RExtension extends DefaultClassManager {
   override def runOnce(em: ExtensionManager): Unit = {
     super.runOnce(em)
     mapper.configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true)
+
+    if (!GraphicsEnvironment.isHeadless) {
+      val menuBar = App.app.frame.getJMenuBar
+
+      menuBar.getComponents.collectFirst {
+        case mi: JMenu if mi.getText == ExtensionMenu.name => mi
+      }.getOrElse {
+        extensionMenu = Option(menuBar.add(new ExtensionMenu))
+      }
+    }
   }
 
   override def unload(em: ExtensionManager): Unit = {
     super.unload(em);
     RExtension.killR()
+    RExtension.shellWindow.setVisible(false)
+    if (!GraphicsEnvironment.isHeadless) {
+      extensionMenu.foreach(App.app.frame.getJMenuBar.remove(_))
+    }
   }
 }
 
@@ -57,8 +77,7 @@ object SetupR extends api.Command {
 
   override def perform(args: Array[Argument], context: Context): Unit = {
     val dummySocket = new ServerSocket(0);
-//    val port = dummySocket.getLocalPort
-    val port = 1337
+    val port = dummySocket.getLocalPort
     dummySocket.close()
 
     val rScript: String = new File(RExtension.extDirectory, "rext.R").toString
@@ -69,6 +88,7 @@ object SetupR extends api.Command {
         "simpleR",
         "Simple R Extension",
         port)
+      RExtension.shellWindow.eval_stringified = Some(RExtension.rProcess.evalStringified)
     } catch {
       case e: Exception => {
         println(e)
@@ -101,4 +121,14 @@ object Set extends api.Command {
   override def getSyntax: Syntax = Syntax.commandSyntax(right = List(Syntax.StringType, Syntax.ReadableType))
   override def perform(args: Array[Argument], context: Context): Unit =
     RExtension.rProcess.assign(args(0).getString, args(1).get)
+}
+
+object ExtensionMenu {
+  val name = "SimpleR"
+}
+
+class ExtensionMenu extends JMenu("SimpleR") {
+  add("Pop-out Interpreter").addActionListener{ _ =>
+    RExtension.shellWindow.setVisible(!RExtension.shellWindow.isVisible)
+  }
 }

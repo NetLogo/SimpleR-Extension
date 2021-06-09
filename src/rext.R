@@ -1,73 +1,65 @@
 if (!suppressPackageStartupMessages(require("rjson"))) {suppressPackageStartupMessages(install.packages(rjson))}
 
-## The only way I was able to find to let the user create new variables and
-## then use them in a different command is to have the eval() interact
-## with the global scope (globalenv()). Therfore all global variables
-## need to be named something that unambigiously tells the user not to create
-## a variable with the same name/override them, like prefixing them all
-## with simpleR_internal_.
-
 # In
-simpleR_internal_stmt_msg <- 0
-simpleR_internal_expr_msg <- 1
-simpleR_internal_assn_msg <- 2
-simpleR_internal_expr_stringified_msg <- 3
+stmt_msg <- 0
+expr_msg <- 1
+assn_msg <- 2
+expr_stringified_msg <- 3
 
 # Out
-simpleR_internal_succ_msg <- 0
-simpleR_internal_err_msg <- 1
+succ_msg <- 0
+err_msg <- 1
 
-simpleR_internal_eval_wrapper <- function(s) {
-  eval(parse(text=s), envir=globalenv())
-  ## Double check that the environment stuff works how I think it does
+env <- new.env(parent = baseenv())
+
+eval_wrapper <- function(s) {
+  eval(parse(text=s), envir=env)
 }
 
-simpleR_internal_send_error <- function(sock, message, cause) {
-  err_msg <- list(type = simpleR_internal_err_msg,
+send_error <- function(sock, message, cause) {
+  err_msg <- list(type = err_msg,
                   body = list(message = message,
                               cause = cause))
   writeLines(toJSON(err_msg), sock)
 }
 
-simpleR_internal_handle_statememt <- function(sock, body) {
-  simpleR_internal_eval_wrapper(body)
-  out_msg <- list(type = simpleR_internal_succ_msg,
+handle_statememt <- function(sock, body) {
+  eval_wrapper(body)
+  out_msg <- list(type = succ_msg,
                   body = "")
   writeLines(toJSON(out_msg), sock)
 }
 
-simpleR_internal_handle_expression <- function(sock, body) {
-  res <- simpleR_internal_eval_wrapper(body)
-  out_msg <- list(type = simpleR_internal_succ_msg,
+handle_expression <- function(sock, body) {
+  res <- eval_wrapper(body)
+  out_msg <- list(type = succ_msg,
                   body = res)
   writeLines(toJSON(out_msg), sock)
 }
 
-simpleR_internal_handle_expression_stringified <- function(sock, body){
-  res <- toString(simpleR_internal_eval_wrapper(body))
-  out_msg <- list(type = simpleR_internal_succ_msg,
+handle_expression_stringified <- function(sock, body){
+  res <- toString(eval_wrapper(body))
+  out_msg <- list(type = succ_msg,
                   body = res)
   writeLines(toJSON(out_msg), sock)
 }
 
-simpleR_internal_handle_assignment <- function(sock, body) {
+handle_assignment <- function(sock, body) {
   varName <- body$varName
   value   <- body$value
   assign(varName, value, envir=globalenv())
-  out_msg <- list(type = simpleR_internal_succ_msg,
+  out_msg <- list(type = succ_msg,
                   body = "")
   writeLines(toJSON(out_msg), sock)
 }
 
-simpleR_internal_server <- function(){
+server <- function(){
   port <- strtoi(commandArgs(trailingOnly=TRUE)[1])
   sock <- socketConnection(host="localhost",
                            port=port,
                            blocking=TRUE,
                            server=TRUE,
                            open="r+")
-  # writeLines("Listening...")
-  # writeLines(toString(port))
   while(TRUE) {
     tryCatch({
       msg_line <- readLines(sock, 1)
@@ -80,22 +72,22 @@ simpleR_internal_server <- function(){
       msg_parsed <- fromJSON(json_str=msg_line, simplify=FALSE)
       msg_type <- msg_parsed$type
 
-      if (msg_type == simpleR_internal_stmt_msg) {
-        simpleR_internal_handle_statememt(sock, msg_parsed$body)
-      } else if (msg_type == simpleR_internal_expr_msg) {
-        simpleR_internal_handle_expression(sock, msg_parsed$body)
-      } else if (msg_type == simpleR_internal_assn_msg) {
-        simpleR_internal_handle_assignment(sock, msg_parsed$body)
-      } else if (msg_type == simpleR_internal_expr_stringified_msg) {
-        simpleR_internal_handle_expression_stringified(sock, msg_parsed$body)
+      if (msg_type == stmt_msg) {
+        handle_statememt(sock, msg_parsed$body)
+      } else if (msg_type == expr_msg) {
+        handle_expression(sock, msg_parsed$body)
+      } else if (msg_type == assn_msg) {
+        handle_assignment(sock, msg_parsed$body)
+      } else if (msg_type == expr_stringified_msg) {
+        handle_expression_stringified(sock, msg_parsed$body)
       } else {
-        simpleR_internal_send_error("Bad message type" + toString(msg_type), "")
+        send_error("Bad message type" + toString(msg_type), "")
       }
     },
      error=function(e) {
        writeLines("error")
        writeLines(e$message)
-       simpleR_internal_send_error(sock, e$message, "TODO")
+       send_error(sock, e$message, "TODO")
      },
     warning=function(w) {
       writeLines("warning")
@@ -105,4 +97,4 @@ simpleR_internal_server <- function(){
   close(sock)
 }
 
-simpleR_internal_server()
+server()

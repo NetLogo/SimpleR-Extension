@@ -15,7 +15,7 @@ import javax.swing.JMenu
 
 object RExtension {
   private var _rProcess: Option[Subprocess] = None
-  var shellWindow = new ShellWindow()
+  var shellWindow : Option[ShellWindow] = None
 
   val extDirectory: File = new File(
     getClass.getClassLoader.asInstanceOf[java.net.URLClassLoader].getURLs()(0).toURI.getPath
@@ -52,6 +52,8 @@ class RExtension extends DefaultClassManager {
     mapper.configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true)
 
     if (!GraphicsEnvironment.isHeadless) {
+      RExtension.shellWindow = Some(new ShellWindow())
+
       val menuBar = App.app.frame.getJMenuBar
 
       menuBar.getComponents.collectFirst {
@@ -65,7 +67,7 @@ class RExtension extends DefaultClassManager {
   override def unload(em: ExtensionManager): Unit = {
     super.unload(em);
     RExtension.killR()
-    RExtension.shellWindow.setVisible(false)
+    RExtension.shellWindow.foreach(sw => sw.setVisible(false))
     if (!GraphicsEnvironment.isHeadless) {
       extensionMenu.foreach(App.app.frame.getJMenuBar.remove(_))
     }
@@ -88,7 +90,7 @@ object SetupR extends api.Command {
         "simpleR",
         "Simple R Extension",
         port)
-      RExtension.shellWindow.eval_stringified = Some(RExtension.rProcess.evalStringified)
+      RExtension.shellWindow.foreach(sw => sw.eval_stringified = Some(RExtension.rProcess.evalStringified))
     } catch {
       case e: Exception => {
         println(e)
@@ -129,6 +131,6 @@ object ExtensionMenu {
 
 class ExtensionMenu extends JMenu("SimpleR") {
   add("Pop-out Interpreter").addActionListener{ _ =>
-    RExtension.shellWindow.setVisible(!RExtension.shellWindow.isVisible)
+    RExtension.shellWindow.map(sw => sw.setVisible(!sw.isVisible))
   }
 }

@@ -55,10 +55,10 @@ class RExtension extends DefaultClassManager {
       RExtension.shellWindow = Some(new ShellWindow())
 
       val menuBar = App.app.frame.getJMenuBar
-
-      menuBar.getComponents.collectFirst {
+      val maybeMenuItem = menuBar.getComponents.collectFirst{
         case mi: JMenu if mi.getText == ExtensionMenu.name => mi
-      }.getOrElse {
+      }
+      if (maybeMenuItem.isEmpty) {
         extensionMenu = Option(menuBar.add(new ExtensionMenu))
       }
     }
@@ -120,7 +120,7 @@ object RunResult extends api.Reporter {
 }
 
 object Set extends api.Command {
-  override def getSyntax: Syntax = Syntax.commandSyntax(right = List(Syntax.StringType, Syntax.ReadableType))
+  override def getSyntax: Syntax = Syntax.commandSyntax(right = List(Syntax.StringType, Subprocess.convertibleTypesSyntax))
   override def perform(args: Array[Argument], context: Context): Unit =
     RExtension.rProcess.assign(args(0).getString, args(1).get)
 }

@@ -47,7 +47,7 @@ handle_expression_stringified <- function(sock, body){
 handle_assignment <- function(sock, body) {
   varName <- body$varName
   value   <- body$value
-  assign(varName, value, envir=globalenv())
+  assign(varName, value, envir=env)
   out_msg <- list(type = succ_msg,
                   body = "")
   writeLines(toJSON(out_msg), sock)

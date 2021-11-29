@@ -90,7 +90,7 @@ object SetupR extends api.Command {
         "simpleR",
         "Simple R Extension",
         port)
-      RExtension.shellWindow.foreach(sw => sw.eval_stringified = Some(RExtension.rProcess.evalStringified))
+      RExtension.shellWindow.foreach(sw => sw.setEvalStringified(Some(RExtension.rProcess.evalStringified)))
     } catch {
       case e: Exception => {
         println(e)

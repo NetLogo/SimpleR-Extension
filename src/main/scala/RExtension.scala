@@ -89,7 +89,7 @@ object SetupR extends api.Command {
         Seq(rScript, port.toString),
         "simpleR",
         "Simple R Extension",
-        port)
+        Some(port))
       RExtension.shellWindow.foreach(sw => sw.setEvalStringified(Some(RExtension.rProcess.evalStringified)))
     } catch {
       case e: Exception => {
@@ -111,7 +111,7 @@ object Run extends api.Command {
 
 object RunResult extends api.Reporter {
   override def getSyntax: Syntax = Syntax.reporterSyntax(
-    right = List(Syntax.StringType | Syntax.RepeatableType),
+    right = List(Syntax.StringType),
     ret = Syntax.WildcardType
   )
 

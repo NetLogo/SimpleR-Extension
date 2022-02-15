@@ -26,7 +26,7 @@ scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warning
 
 libraryDependencies ++= Seq(
   "org.json4s"        %% "json4s-jackson" % "3.5.3",
-  "org.nlogo.langextension" %% "lang-extension-lib" % "0.2",
+  "org.nlogo.langextension" %% "lang-extension-lib" % "0.3",
 )
 
 netLogoPackageExtras += (baseDirectory(_ / "src" / "rext.r").value, "rext.r")

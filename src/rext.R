@@ -16,10 +16,10 @@ eval_wrapper <- function(s) {
   eval(parse(text=s), envir=env)
 }
 
-send_error <- function(sock, message, cause) {
+send_error <- function(sock, message, longMessage) {
   err_msg <- list(type = err_msg,
                   body = list(message = message,
-                              cause = cause))
+                              longMessage = paste(longMessage, "\n")))
   writeLines(toJSON(err_msg), sock)
 }
 
@@ -85,9 +85,7 @@ server <- function(){
       }
     },
      error=function(e) {
-       writeLines("error")
-       writeLines(e$message)
-       send_error(sock, e$message, "TODO")
+       send_error(sock, e$message, e$message)
      },
     warning=function(w) {
       writeLines("warning")

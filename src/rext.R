@@ -10,7 +10,9 @@ expr_stringified_msg <- 3
 succ_msg <- 0
 err_msg <- 1
 
-env <- new.env(parent = baseenv())
+# The environment we are working in should have the same parent as the current environment.
+# That way we have all of the default imports but none of the variables we define in *this* file's environment.
+env <- new.env(parent = parent.env(environment()))
 
 eval_wrapper <- function(s) {
   eval(parse(text=s), envir=env)

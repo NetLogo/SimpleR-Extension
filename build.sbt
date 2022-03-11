@@ -1,33 +1,23 @@
-enablePlugins(org.nlogo.build.NetLogoExtension)
+import org.nlogo.build.{ ExtensionDocumentationPlugin, NetLogoExtension }
 
-resolvers      += "netlogo" at "https://dl.cloudsmith.io/public/netlogo/netlogo/maven/"
-resolvers      += "netlogo-lang-extension" at "https://dl.cloudsmith.io/public/netlogo/netlogoextensionlanguageserverlibrary/maven"
-netLogoVersion := "6.2.0-d27b502"
+enablePlugins(NetLogoExtension)
+enablePlugins(ExtensionDocumentationPlugin)
 
-netLogoClassManager := "org.nlogo.extensions.simpleR.RExtension"
-
-version := "0.1.0-SNAPSHOT"
-
+version    := "0.1.0"
 isSnapshot := true
 
-netLogoExtName := "simpleR"
+netLogoVersion       := "6.2.2"
+netLogoClassManager  := "org.nlogo.extensions.simpleR.RExtension"
+netLogoExtName       := "simpleR"
+netLogoPackageExtras += (baseDirectory.value / "src" / "rext.R", None)
+netLogoZipExtras    ++= Seq(baseDirectory.value / "demos", baseDirectory.value / "README.md")
 
-netLogoZipSources := false
-
-netLogoTarget := org.nlogo.build.NetLogoExtension.directoryTarget(baseDirectory.value)
-
-scalaVersion := "2.12.12"
-
-scalaSource in Test := baseDirectory.value / "src" / "test"
-
+scalaVersion           := "2.12.12"
+scalaSource in Test    := baseDirectory.value / "src" / "test"
 scalaSource in Compile := baseDirectory.value / "src" / "main"
+scalacOptions         ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings")
 
-scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings")
-
+resolvers           += "netlogo-lang-extension" at "https://dl.cloudsmith.io/public/netlogo/netlogoextensionlanguageserverlibrary/maven"
 libraryDependencies ++= Seq(
-  "org.json4s"        %% "json4s-jackson" % "3.5.3",
-  "org.nlogo.langextension" %% "lang-extension-lib" % "0.3",
+  "org.nlogo.langextension" %% "lang-extension-lib" % "0.3"
 )
-
-netLogoPackageExtras += (baseDirectory(_ / "src" / "rext.r").value, "rext.r")
-

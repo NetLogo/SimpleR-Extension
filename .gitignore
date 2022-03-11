@@ -1,0 +1,8 @@
+.bundledFiles
+.bsp
+extensions/
+target/
+*.zip
+*.jar
+/rext.r
+demos/my_simple_economy_histogram.png

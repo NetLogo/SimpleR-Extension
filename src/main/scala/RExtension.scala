@@ -11,6 +11,7 @@ import org.nlogo.core.Syntax
 import java.awt.{GraphicsEnvironment, MenuBar}
 import java.io.File
 import java.net.ServerSocket
+import java.util.Objects
 import javax.swing.JMenu
 
 object RExtension {
@@ -35,6 +36,9 @@ object RExtension {
     _rProcess.foreach(_.close())
     _rProcess = None
   }
+
+  def isHeadless: Boolean =
+    GraphicsEnvironment.isHeadless || Objects.equals(System.getProperty("org.nlogo.preferHeadless"), "true")
 }
 
 class RExtension extends DefaultClassManager {
@@ -51,7 +55,7 @@ class RExtension extends DefaultClassManager {
     super.runOnce(em)
     mapper.configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true)
 
-    if (!GraphicsEnvironment.isHeadless) {
+    if (!RExtension.isHeadless) {
       RExtension.shellWindow = Some(new ShellWindow())
 
       val menuBar = App.app.frame.getJMenuBar
@@ -68,7 +72,7 @@ class RExtension extends DefaultClassManager {
     super.unload(em);
     RExtension.killR()
     RExtension.shellWindow.foreach(sw => sw.setVisible(false))
-    if (!GraphicsEnvironment.isHeadless) {
+    if (!RExtension.isHeadless) {
       extensionMenu.foreach(App.app.frame.getJMenuBar.remove(_))
     }
   }
@@ -82,7 +86,9 @@ object SetupR extends api.Command {
     val port = dummySocket.getLocalPort
     dummySocket.close()
 
-    val rScript: String = new File(RExtension.extDirectory, "rext.R").toString
+    val maybeRFile = new File(RExtension.extDirectory, "rext.R")
+    val rFile = if (maybeRFile.exists) {maybeRFile} else { (new File("rext.R")).getCanonicalFile}
+    val rScript = rFile.toString
     try {
       RExtension.rProcess = Subprocess.start(context.workspace,
         Seq("Rscript"),

@@ -2,3 +2,48 @@ smoke-test
   extensions [ simpleR ]
   O> simpleR:setup
   simpleR:runresult "median(c(3, 1, 2))" => 2
+
+all-commands
+  extensions [ simpleR ]
+  O> simpleR:setup
+  O> simpleR:run "a <- 5"
+  simpleR:runresult "a" => 5
+  O> simpleR:set "b" 10
+  simpleR:runresult "b" => 10
+
+default-environment
+  ## check that we can access variables from the environment that R gives us on startup. Note that this is different than the "empty" or "global" environment.
+  extensions [ simpleR ]
+  O> simpleR:setup
+  O> (simpleR:run "library(datasets)" "data(iris)")
+  simpleR:runresult "head(iris, 2)" => [["Sepal.Length" [5.1 4.9]] ["Sepal.Width" [3.5 3]] ["Petal.Length" [1.4 1.4]] ["Petal.Width" [0.2 0.2]] ["Species" ["setosa" "setosa"]]]
+
+serialization
+  extensions [ simpleR ]
+  O> simpleR:setup
+  O> simpleR:set "my_str" "abc"
+  simpleR:runresult "my_str" => "abc"
+  O> simpleR:set "my_list" [1 2 3]
+  simpleR:runresult "my_list" => [1 2 3]
+  O> simpleR:run "my_numeric_vector <- c(1, 2, 3)"
+  simpleR:runresult "my_numeric_vector" => [1 2 3]
+  O> simpleR:run "my_heterogeneous_list <- list(TRUE, 1, 'two')"
+  simpleR:runresult "my_heterogeneous_list" => [true 1 "two"]
+
+agents-and-agentsets
+  extensions [ simpleR ]
+  breed [goats goat]
+  goats-own [ energy ]
+  O> create-goats 2 [ set color 75 set heading 0]
+  O> ask goat 0 [ set energy 42 set xcor 5]
+  O> ask goat 1 [ set energy -42 set xcor -5]
+  O> simpleR:setup
+  O> simpleR:set "goatZero" goat 0
+  simpleR:runresult "goatZero" => [["WHO" 0] ["COLOR" 75] ["HEADING" 0] ["XCOR" 5] ["YCOR" 0] ["SHAPE" "default"] ["LABEL" ""] ["LABEL-COLOR" 9.9] ["BREED" "GOATS"] ["HIDDEN?" false] ["SIZE" 1] ["PEN-SIZE" 1] ["PEN-MODE" "up"] ["ENERGY" 42]]
+  O> simpleR:set "goatOne" goat 1
+  simpleR:runresult "goatOne" => [["WHO" 1] ["COLOR" 75] ["HEADING" 0] ["XCOR" -5] ["YCOR" 0] ["SHAPE" "default"] ["LABEL" ""] ["LABEL-COLOR" 9.9] ["BREED" "GOATS"] ["HIDDEN?" false] ["SIZE" 1] ["PEN-SIZE" 1] ["PEN-MODE" "up"] ["ENERGY" -42]]
+  O> simpleR:set "goats_list_of_lists" goats
+  simpleR:runresult "goats_list_of_lists" => [[["WHO" 0] ["COLOR" 75] ["HEADING" 0] ["XCOR" 5] ["YCOR" 0] ["SHAPE" "default"] ["LABEL" ""] ["LABEL-COLOR" 9.9] ["BREED" "GOATS"] ["HIDDEN?" false] ["SIZE" 1] ["PEN-SIZE" 1] ["PEN-MODE" "up"] ["ENERGY" 42]] [["WHO" 1] ["COLOR" 75] ["HEADING" 0] ["XCOR" -5] ["YCOR" 0] ["SHAPE" "default"] ["LABEL" ""] ["LABEL-COLOR" 9.9] ["BREED" "GOATS"] ["HIDDEN?" false] ["SIZE" 1] ["PEN-SIZE" 1] ["PEN-MODE" "up"] ["ENERGY" -42]]]
+  O> simpleR:run "goats_data_frame <- as.data.frame(do.call(rbind, goats_list_of_lists))"
+  simpleR:runresult "goats_data_frame" => [["WHO" [0 1]] ["COLOR" [75 75]] ["HEADING" [0 0]] ["XCOR" [5 -5]] ["YCOR" [0 0]] ["SHAPE" ["default" "default"]] ["LABEL" ["" ""]] ["LABEL-COLOR" [9.9 9.9]] ["BREED" ["GOATS" "GOATS"]] ["HIDDEN?" [false false]] ["SIZE" [1 1]] ["PEN-SIZE" [1 1]] ["PEN-MODE" ["up" "up"]] ["ENERGY" [42 -42]]]
+

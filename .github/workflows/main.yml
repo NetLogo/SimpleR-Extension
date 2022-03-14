@@ -1,0 +1,22 @@
+name: build-and-test
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: olafurpg/setup-scala@v10
+        with:
+          java-version: adopt@1.8
+
+      - uses: r-lib/actions/setup-r@v2
+
+      - run: Rscript -e 'print("R successfully installed")'
+      - run: sbt -v update compile
+      - run: sbt -v test

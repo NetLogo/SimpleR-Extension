@@ -1,4 +1,4 @@
-package org.nlogo.extensions.simpleR
+package org.nlogo.extensions.simpler
 
 import java.io.File
 import org.nlogo.headless.TestLanguage

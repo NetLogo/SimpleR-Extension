@@ -1,4 +1,4 @@
-package org.nlogo.extensions.simpleR
+package org.nlogo.extensions.simpler
 
 import com.fasterxml.jackson.core.JsonParser
 import org.json4s.jackson.JsonMethods.mapper

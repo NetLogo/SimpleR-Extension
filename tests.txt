@@ -1,3 +1,11 @@
+initial-setup
+  extensions [ simpleR ]
+  O> simpleR:setup
+  ## There is a bug that manifests on the github actions runner where
+  ## R primitives only work after *two* setup calls. This extra setup at the
+  ## top of the file is a hack to get around that and let the rest of the tests
+  ## run properly - James Hovet 3/14/22
+
 smoke-test
   extensions [ simpleR ]
   O> simpleR:setup

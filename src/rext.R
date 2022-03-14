@@ -1,4 +1,4 @@
-if (!suppressPackageStartupMessages(require("rjson"))) {suppressPackageStartupMessages(install.packages(rjson))}
+if (!suppressPackageStartupMessages(require("rjson"))) {suppressPackageStartupMessages(install.packages("rjson"))}
 
 # In
 stmt_msg <- 0

@@ -1,4 +1,4 @@
-if (!suppressPackageStartupMessages(require("rjson"))) {suppressPackageStartupMessages(install.packages("rjson"))}
+if (!suppressPackageStartupMessages(require("rjson"))) {suppressPackageStartupMessages(install.packages("rjson", repos = "http://cran.us.r-project.org", quiet = TRUE))}
 
 # In
 stmt_msg <- 0

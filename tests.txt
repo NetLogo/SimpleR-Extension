@@ -1,11 +1,3 @@
-initial-setup
-  extensions [ simpleR ]
-  O> simpleR:setup
-  ## There is a bug that manifests on the github actions runner where
-  ## R primitives only work after *two* setup calls. This extra setup at the
-  ## top of the file is a hack to get around that and let the rest of the tests
-  ## run properly - James Hovet 3/14/22
-
 smoke-test
   extensions [ simpleR ]
   O> simpleR:setup
@@ -54,8 +46,3 @@ agents-and-agentsets
   simpleR:runresult "goats_list_of_lists" => [[["WHO" 0] ["COLOR" 75] ["HEADING" 0] ["XCOR" 5] ["YCOR" 0] ["SHAPE" "default"] ["LABEL" ""] ["LABEL-COLOR" 9.9] ["BREED" "GOATS"] ["HIDDEN?" false] ["SIZE" 1] ["PEN-SIZE" 1] ["PEN-MODE" "up"] ["ENERGY" 42]] [["WHO" 1] ["COLOR" 75] ["HEADING" 0] ["XCOR" -5] ["YCOR" 0] ["SHAPE" "default"] ["LABEL" ""] ["LABEL-COLOR" 9.9] ["BREED" "GOATS"] ["HIDDEN?" false] ["SIZE" 1] ["PEN-SIZE" 1] ["PEN-MODE" "up"] ["ENERGY" -42]]]
   O> simpleR:run "goats_data_frame <- as.data.frame(do.call(rbind, goats_list_of_lists))"
   simpleR:runresult "goats_data_frame" => [["WHO" [0 1]] ["COLOR" [75 75]] ["HEADING" [0 0]] ["XCOR" [5 -5]] ["YCOR" [0 0]] ["SHAPE" ["default" "default"]] ["LABEL" ["" ""]] ["LABEL-COLOR" [9.9 9.9]] ["BREED" ["GOATS" "GOATS"]] ["HIDDEN?" [false false]] ["SIZE" [1 1]] ["PEN-SIZE" [1 1]] ["PEN-MODE" ["up" "up"]] ["ENERGY" [42 -42]]]
-
-median
-  extensions [ simpleR ]
-  O> simpleR:setup
-  simpleR:runresult "median(1:3)" => 2

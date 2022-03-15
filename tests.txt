@@ -18,6 +18,11 @@ default-environment
   O> (simpleR:run "library(datasets)" "data(iris)")
   simpleR:runresult "head(iris, 2)" => [["Sepal.Length" [5.1 4.9]] ["Sepal.Width" [3.5 3]] ["Petal.Length" [1.4 1.4]] ["Petal.Width" [0.2 0.2]] ["Species" ["setosa" "setosa"]]]
 
+stop-throws-extension-exception
+  extensions [ simpleR ]
+  O> simpleR:setup
+  O> simpleR:run "stop('hi')" => ERROR Extension exception: hi
+
 serialization
   extensions [ simpleR ]
   O> simpleR:setup

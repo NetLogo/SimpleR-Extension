@@ -1,4 +1,6 @@
-if (!suppressPackageStartupMessages(require("rjson"))) {suppressPackageStartupMessages(install.packages("rjson", repos = "http://cran.us.r-project.org", quiet = TRUE))}
+if (!suppressPackageStartupMessages(require("rjson"))) {
+  suppressPackageStartupMessages(install.packages("rjson", repos = "http://cran.us.r-project.org", quiet = TRUE))
+}
 
 # In
 stmt_msg <- 0
@@ -82,9 +84,9 @@ server <- function(){
         }
       }
     },
-     error=function(e) {
-       send_error(sock, e$message, e$message)
-     },
+    error=function(e) {
+      send_error(sock, e$message, e$message)
+    },
     warning=function(w) {
       writeLines("warning")
       writeLines(w$message)

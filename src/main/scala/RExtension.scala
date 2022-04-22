@@ -2,25 +2,24 @@ package org.nlogo.extensions.simpler
 
 import com.fasterxml.jackson.core.JsonParser
 import org.json4s.jackson.JsonMethods.mapper
-import org.nlogo.langextension.{ShellWindow, Subprocess}
-import org.nlogo.api
-import org.nlogo.api._
-import org.nlogo.app.App
+import org.nlogo.langextension.Subprocess
+import org.nlogo.api.{ Argument, Command, Context, DefaultClassManager, ExtensionException, ExtensionManager, PrimitiveManager, Reporter }
 import org.nlogo.core.Syntax
 
-import java.awt.{GraphicsEnvironment, MenuBar}
 import java.io.File
 import java.net.ServerSocket
-import java.util.Objects
-import javax.swing.JMenu
+
+import org.nlogo.extensions.simpler.config.{ Config, Menu }
 
 object RExtension {
-  private var _rProcess: Option[Subprocess] = None
-  var shellWindow : Option[ShellWindow] = None
+  val codeName   = "sr"
+  val longName   = "SimpleR Extension"
+  val extLangBin = "Rscript"
 
-  val extDirectory: File = new File(
-    getClass.getClassLoader.asInstanceOf[java.net.URLClassLoader].getURLs()(0).toURI.getPath
-  ).getParentFile
+  var menu: Option[Menu] = None
+  val config: Config     = Config.createForPropertyFile(RExtension.codeName)
+
+  private var _rProcess: Option[Subprocess] = None
 
   def rProcess: Subprocess =
     _rProcess.getOrElse(throw new ExtensionException((
@@ -37,13 +36,9 @@ object RExtension {
     _rProcess = None
   }
 
-  def isHeadless: Boolean =
-    GraphicsEnvironment.isHeadless || Objects.equals(System.getProperty("org.nlogo.preferHeadless"), "true")
 }
 
 class RExtension extends DefaultClassManager {
-  var extensionMenu: Option[JMenu] = None
-
   def load(manager: PrimitiveManager): Unit = {
     manager.addPrimitive("setup", SetupR)
     manager.addPrimitive("run", Run)
@@ -54,31 +49,18 @@ class RExtension extends DefaultClassManager {
   override def runOnce(em: ExtensionManager): Unit = {
     super.runOnce(em)
     mapper.configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true)
-
-    if (!RExtension.isHeadless) {
-      RExtension.shellWindow = Some(new ShellWindow())
-
-      val menuBar = App.app.frame.getJMenuBar
-      val maybeMenuItem = menuBar.getComponents.collectFirst{
-        case mi: JMenu if mi.getText == ExtensionMenu.name => mi
-      }
-      if (maybeMenuItem.isEmpty) {
-        extensionMenu = Option(menuBar.add(new ExtensionMenu))
-      }
-    }
+    RExtension.menu = Menu.create(RExtension.longName, RExtension.extLangBin, RExtension.config)
   }
 
   override def unload(em: ExtensionManager): Unit = {
     super.unload(em);
     RExtension.killR()
-    RExtension.shellWindow.foreach(sw => sw.setVisible(false))
-    if (!RExtension.isHeadless) {
-      extensionMenu.foreach(App.app.frame.getJMenuBar.remove(_))
-    }
+    RExtension.menu.foreach(_.unload())
   }
+
 }
 
-object SetupR extends api.Command {
+object SetupR extends Command {
   override def getSyntax: Syntax = Syntax.commandSyntax(right = List())
 
   override def perform(args: Array[Argument], context: Context): Unit = {
@@ -86,27 +68,37 @@ object SetupR extends api.Command {
     val port = dummySocket.getLocalPort
     dummySocket.close()
 
-    val maybeRFile = new File(RExtension.extDirectory, "rext.R")
-    val rFile = if (maybeRFile.exists) {maybeRFile} else { (new File("rext.R")).getCanonicalFile}
-    val rScript = rFile.toString
+    val rExtensionDirectory = Config.getExtensionRuntimeDirectory(RExtension.codeName)
+    val maybeRExtFile       = new File(rExtensionDirectory, "rext.R")
+    val rExtFile            = if (maybeRExtFile.exists) { maybeRExtFile } else { (new File("rext.R")).getCanonicalFile }
+    val rExtFilePath        = rExtFile.toString
+    val maybeRRuntimePath   = Config.getRuntimePath(
+        RExtension.extLangBin
+      , RExtension.config.runtimePath.getOrElse("")
+      , "--version"
+    )
+    val rRuntimePath = maybeRRuntimePath.getOrElse(
+      throw new ExtensionException(s"We couldn't find an R executable file to run.  Please make sure R is installed on your system.  Then you can tell the ${RExtension.longName} where it's located by opening the SimplerR Extension menu and selecting Configure to choose the location yourself or putting making sure ${RExtension.extLangBin} is available on your PATH.\n")
+    )
+
     try {
       RExtension.rProcess = Subprocess.start(context.workspace,
-        Seq("Rscript"),
-        Seq(rScript, port.toString),
-        "sr",
-        "Simple R Extension",
+        Seq(rRuntimePath),
+        Seq(rExtFilePath, port.toString),
+        RExtension.codeName,
+        RExtension.longName,
         Some(port))
-      RExtension.shellWindow.foreach(sw => sw.setEvalStringified(Some(RExtension.rProcess.evalStringified)))
+      RExtension.menu.foreach(_.setup(RExtension.rProcess.evalStringified))
     } catch {
       case e: Exception => {
         println(e)
-        throw new ExtensionException("SimpleR didn't want to start")
+        throw new ExtensionException(s"""The ${RExtension.longName} didn't want to start.  Make sure that the rjson package is installed for use by R: `install.packages("rjson", repos = "http://cran.us.r-project.org", quiet = TRUE)`.""", e)
       }
     }
   }
 }
 
-object Run extends api.Command {
+object Run extends Command {
   override def getSyntax: Syntax = Syntax.commandSyntax(
     right = List(Syntax.StringType | Syntax.RepeatableType)
   )
@@ -115,7 +107,7 @@ object Run extends api.Command {
     RExtension.rProcess.exec(args.map(_.getString).mkString("\n"))
 }
 
-object RunResult extends api.Reporter {
+object RunResult extends Reporter {
   override def getSyntax: Syntax = Syntax.reporterSyntax(
     right = List(Syntax.StringType),
     ret = Syntax.WildcardType
@@ -125,18 +117,8 @@ object RunResult extends api.Reporter {
     RExtension.rProcess.eval(args.map(_.getString).mkString("\n"))
 }
 
-object Set extends api.Command {
+object Set extends Command {
   override def getSyntax: Syntax = Syntax.commandSyntax(right = List(Syntax.StringType, Subprocess.convertibleTypesSyntax))
   override def perform(args: Array[Argument], context: Context): Unit =
     RExtension.rProcess.assign(args(0).getString, args(1).get)
-}
-
-object ExtensionMenu {
-  val name = "SimpleR"
-}
-
-class ExtensionMenu extends JMenu("SimpleR") {
-  add("Pop-out Interpreter").addActionListener{ _ =>
-    RExtension.shellWindow.map(sw => sw.setVisible(!sw.isVisible))
-  }
 }

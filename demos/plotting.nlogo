@@ -1,10 +1,10 @@
-extensions [ simpler ]
+extensions [ sr ]
 
 turtles-own [ wealth ]
 
 to create-r-plot
-  simpleR:set "wealth_list" [wealth] of turtles
-  (simpleR:run
+  sr:set "wealth_list" [wealth] of turtles
+  (sr:run
     (word "png(\"" filename "\")")
     "wealth_vector <- unlist(wealth_list)"
     "hist(wealth_vector)"
@@ -14,7 +14,7 @@ end
 
 ;; pared down Simple Economy code
 to setup
-  simpleR:setup
+  sr:setup
   clear-all
   create-turtles 500 [
     set wealth 100
@@ -155,25 +155,25 @@ String
 
 @#$#@#$#@
 ## WHAT IS IT?
-A demo illustrating how to use the SimpleR extension and how to use it to make plots. 
+A demo illustrating how to use the SimpleR extension and how to use it to make plots.
 
 The model is based off of the "Simple Economy" model from the default models library. The only additions made are those related to the SimpleR extension.
 
 ## HOW IT WORKS
 
-In the create-r-plot procedure, the SimpleR extension is setup, wealth values of the turtles are sent over from the NetLogo process to the R environment and a plot is constructed. 
+In the create-r-plot procedure, the SimpleR extension is setup, wealth values of the turtles are sent over from the NetLogo process to the R environment and a plot is constructed.
 
 ## HOW TO USE IT
 
-Run setup and use "go" to run the model for a bit. Stop the model and then specify a filename for the output image file. The resulting file will be a .png regardless of the filename specified. Hit "create R plot image" and the resulting plot image should appear in the same directory as the .nlogo file. 
+Run setup and use "go" to run the model for a bit. Stop the model and then specify a filename for the output image file. The resulting file will be a .png regardless of the filename specified. Hit "create R plot image" and the resulting plot image should appear in the same directory as the .nlogo file.
 
 ## THINGS TO NOTICE
 
-Notice how NetLogo values are passed to the extension with simpleR:set. 
+Notice how NetLogo values are passed to the extension with sr:set.
 
-Additionally, notice how we need to convert the NetLogo *list* to an R numeric vector in order to create a histogram with it. 
+Additionally, notice how we need to convert the NetLogo *list* to an R numeric vector in order to create a histogram with it.
 
-Finally, see that we can pass repeating string parameters to simpleR:run in order to easily supply multiple lines of R code. 
+Finally, see that we can pass repeating string parameters to sr:run in order to easily supply multiple lines of R code.
 
 ## EXTENDING THE MODEL
 

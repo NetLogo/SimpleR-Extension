@@ -8,7 +8,7 @@ isSnapshot := true
 
 netLogoVersion       := "6.2.2"
 netLogoClassManager  := "org.nlogo.extensions.simpler.RExtension"
-netLogoExtName       := "simpler"
+netLogoExtName       := "sr"
 netLogoPackageExtras += (baseDirectory.value / "src" / "rext.R", None)
 netLogoZipExtras    ++= Seq(baseDirectory.value / "demos", baseDirectory.value / "README.md")
 

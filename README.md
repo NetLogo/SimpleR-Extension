@@ -9,7 +9,7 @@ Make sure your sbt is at least at version 0.13.6
 
 Run `sbt package`.
 
-If compilation succeeds, `simpleR.jar` will be created, and the required dependencies will be copied to the root of the repository.  Copy all the `jar` files and `rext.r` from the repository root to a `simpleR` directory inside your NetLogo `extensions` directory.
+If compilation succeeds, `sr.jar` will be created, and the required dependencies will be copied to the root of the repository.  Copy all the `jar` files and `rext.r` from the repository root to a `sr` directory inside your NetLogo `extensions` directory.
 
 ## Using
 
@@ -20,29 +20,29 @@ To use this extension, you must first include it at the top of your NetLogo mode
 
 ```netlogo
 extensions [
-    simpleR
-    ; ... your other extensions
+  sr
+  ; ... your other extensions
 ]
 ```
 
-You must then initialize the R environment with `simpleR:setup`. This only needs to be done once per session.
+You must then initialize the R environment with `sr:setup`. This only needs to be done once per session.
 Any subsequent calls will reset your R environment.
 
 Here's an example to get you started:
 
 ```netlogo
-observer> simpleR:setup
-;; simpleR:runresult evaluates R statements and returns the result back to NetLogo
-observer> show simpleR:runresult "2 + 2"
+observer> sr:setup
+;; sr:runresult evaluates R statements and returns the result back to NetLogo
+observer> show sr:runresult "2 + 2"
 observer: 4
-;; simpleR:run runs R code
-observer> simpleR:run "cat('hello world')"
+;; sr:run runs R code
+observer> sr:run "cat('hello world')"
 hello world
 ;; any standard output gets forwarded to the command center output
 ;; js:set sets JS variables to values from NetLogo
 observer> ask patch 0 0 [ set pcolor red ]
-observer> simpleR:set "center_patch_color" [pcolor] of patch 0 0
-observer> show simpleR:runresult "center_patch_color"
+observer> sr:set "center_patch_color" [pcolor] of patch 0 0
+observer> show sr:runresult "center_patch_color"
 observer: 15 ;; the NetLogo representation of the color red
 ```
 
@@ -65,10 +65,10 @@ will result in the NetLogo error "Extension exception: hi".
 ## Primitives
 
 
-### `simpleR:setup`
+### `sr:setup`
 
 ```NetLogo
-simpleR:setup
+sr:setup
 ```
 
 
@@ -78,10 +78,10 @@ Running this command again will shutdown the current R environment and start a n
 
 
 
-### `simpleR:run`
+### `sr:run`
 
 ```NetLogo
-simpleR:run R-statement
+sr:run R-statement
 ```
 
 
@@ -91,7 +91,7 @@ To make multi-line R code easier to run, this command will take multiple strings
 For instance:
 
 ```NetLogo
-(simpleR:run
+(sr:run
   "domain <- seq(-3.14, 3.14, 0.01)"
   "range <- sin(domain)"
   "png('my_file.png')"
@@ -104,15 +104,15 @@ For instance:
 )
 ```
 
-`simpleR:run` will wait for the statements to finish before continuing.
+`sr:run` will wait for the statements to finish before continuing.
 If you have long-running R code, NetLogo may freeze for a bit while it runs.
 
 
 
-### `simpleR:runresult`
+### `sr:runresult`
 
 ```NetLogo
-simpleR:runresult R-expression
+sr:runresult R-expression
 ```
 
 
@@ -147,10 +147,10 @@ Other objects will be converted to a string representation if possible and and m
 
 
 
-### `simpleR:set`
+### `sr:set`
 
 ```NetLogo
-simpleR:set variable-name value
+sr:set variable-name value
 ```
 
 
@@ -161,13 +161,13 @@ NetLogo objects will be converted to R objects as expected.
 Note that lists in NetLogo are converted into lists in R. You will often want to use the R function `unlist` to convert these lists into R vectors.
 
 ```NetLogo
-simpleR:set "x" 42
-simpleR:run "print(x)" ;; prints `[1] 42` to the command center
-simpleR:set "y" [1 2 3]
-simpleR:run "print(typeof(y))" ;; prints `[1] "list"` to the command center
-simpleR:run "print(typeof(unlist(y)))" ;; prints `[1] "double"` to the command center
-simpleR:run "print(unlist(y))" ;; prints `[1] 1, 2, 3` to the command center
-show simpleR:runresult "y" ;; reports [1 2 3]
+sr:set "x" 42
+sr:run "print(x)" ;; prints `[1] 42` to the command center
+sr:set "y" [1 2 3]
+sr:run "print(typeof(y))" ;; prints `[1] "list"` to the command center
+sr:run "print(typeof(unlist(y)))" ;; prints `[1] "double"` to the command center
+sr:run "print(unlist(y))" ;; prints `[1] 1, 2, 3` to the command center
+show sr:runresult "y" ;; reports [1 2 3]
 ```
 
 Agents are converted into lists with named elements for each agent variable.
@@ -186,9 +186,9 @@ create-goats 2 [ set color 75 ]
 ask goat 0 [ set energy 42 set xcor 5]
 ask goat 1 [ set energy -42 set xcor -5]
 
-simpleR:set "goat" goat 0
-simpleR:run "print(typeof(goat))" ;; prints `[1] "list"` to the command center
-simpleR:run "print(goat)"
+sr:set "goat" goat 0
+sr:run "print(typeof(goat))" ;; prints `[1] "list"` to the command center
+sr:run "print(goat)"
 ;; Should output:
 ;; $WHO
 ;; [1] 0
@@ -197,9 +197,9 @@ simpleR:run "print(goat)"
 ;; [1] 75
 ;; (etc.)
 
-simpleR:set "goats_list_of_lists" goats
-simpleR:run "goats_data_frame <- as.data.frame(do.call(rbind, goats_list_of_lists))"
-simpleR:run "print(goats_data_frame)"
+sr:set "goats_list_of_lists" goats
+sr:run "goats_data_frame <- as.data.frame(do.call(rbind, goats_list_of_lists))"
+sr:run "print(goats_data_frame)"
 ;; Should output:
 ;;   WHO COLOR HEADING XCOR YCOR   SHAPE LABEL LABEL-COLOR BREED HIDDEN? SIZE
 ;; 1   0    75      82    5    0 default               9.9 GOATS   FALSE    1
@@ -216,14 +216,14 @@ Agents with variables containing references to agentsets will have those variabl
 
 ## Transitioning from the old R extension
 
-Most all of the functionality from the old R extension remains in simpleR, though much of the specifics of how data is passed between NetLogo and R has been changed.
+Most all of the functionality from the old R extension remains in SimpleR, though much of the specifics of how data is passed between NetLogo and R has been changed.
 
-For example, `simpleR:runresult` can be used instead of the old `r:get`, but the two handle dataframes differently.
-`simpleR:set` can replace `r:put`, but note that `simpleR:set` does not automatically convert lists of similar types into vectors. Use the R function `unlist()` to do so manually.
-`simpleR:run` should be able to be a drop-in replacement for `r:eval`, though there is no counterpart for the experimental primitive `r:__evaldirect`.
-To clear the R environment, call `simpleR:setup` instead of `r:clear` or `r:clearLocal`.
+For example, `sr:runresult` can be used instead of the old `r:get`, but the two handle dataframes differently.
+`sr:set` can replace `r:put`, but note that `sr:set` does not automatically convert lists of similar types into vectors. Use the R function `unlist()` to do so manually.
+`sr:run` should be able to be a drop-in replacement for `r:eval`, though there is no counterpart for the experimental primitive `r:__evaldirect`.
+To clear the R environment, call `sr:setup` instead of `r:clear` or `r:clearLocal`.
 
-Displaying a plot in a window is not supported, but plotting to image devices is. See the `simpleR:run` documentation or the `plotting.nlogo` demo file.
+Displaying a plot in a window is not supported, but plotting to image devices is. See the `sr:run` documentation or the `plotting.nlogo` demo file.
 
 There are no longer the same convenience methods to easily convert NetLogo variables into helpful R data structures. Perhaps this can be an area of improvement in the future.
 

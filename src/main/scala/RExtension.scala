@@ -24,7 +24,7 @@ object RExtension {
 
   def rProcess: Subprocess =
     _rProcess.getOrElse(throw new ExtensionException((
-      "R process has not been started. Please run simpleR:setup first before any other simpleR extension primitive"
+      "R process has not been started. Please run sr:setup first before any other SimpleR extension primitive"
       )))
 
   def rProcess_=(proc: Subprocess): Unit = {
@@ -93,7 +93,7 @@ object SetupR extends api.Command {
       RExtension.rProcess = Subprocess.start(context.workspace,
         Seq("Rscript"),
         Seq(rScript, port.toString),
-        "simpleR",
+        "sr",
         "Simple R Extension",
         Some(port))
       RExtension.shellWindow.foreach(sw => sw.setEvalStringified(Some(RExtension.rProcess.evalStringified)))

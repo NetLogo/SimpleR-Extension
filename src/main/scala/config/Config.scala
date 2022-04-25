@@ -13,7 +13,7 @@ object Config {
     val loaderUrls         = configLoader.getURLs()
     val loaderFiles        = loaderUrls.map( (url) => new File(url.toURI.getPath) )
     val jarName            = s"$codeName.jar"
-    val maybeExtensionFile = loaderFiles.find( (f) => jarName.equals(f.getName()))
+    val maybeExtensionFile = loaderFiles.find( (f) => jarName.equals(f.getName()) )
     val extensionFile      = maybeExtensionFile.getOrElse(
       throw new ExtensionException(s"Could not locate the extension $jarName file to determine the runtime directory?")
     )

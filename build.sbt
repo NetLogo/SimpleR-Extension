@@ -17,6 +17,12 @@ scalaSource in Test    := baseDirectory.value / "src" / "test"
 scalaSource in Compile := baseDirectory.value / "src" / "main"
 scalacOptions         ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-Xlint")
 
+Compile / packageBin / artifactPath := {
+  val oldPath = (Compile / packageBin / artifactPath).value.toPath
+  val newPath = oldPath.getParent / s"${netLogoExtName.value}.jar"
+  newPath.toFile
+}
+
 resolvers           += "netlogo-lang-extension" at "https://dl.cloudsmith.io/public/netlogo/netlogoextensionlanguageserverlibrary/maven"
 libraryDependencies ++= Seq(
   "org.nlogo.langextension" %% "lang-extension-lib" % "0.3.1"

@@ -70,6 +70,7 @@ object SetupR extends Command {
     dummySocket.close()
 
     val rExtensionDirectory = Config.getExtensionRuntimeDirectory(RExtension.codeName)
+    // see docs in `rlibs.R` for what this is about
     val maybeRLibFile       = new File(rExtensionDirectory, "rlibs.R")
     val rLibFile            = if (maybeRLibFile.exists) { maybeRLibFile } else { (new File("rlibs.R")).getCanonicalFile }
     val rLibFilePath        = rLibFile.toString
@@ -87,9 +88,7 @@ object SetupR extends Command {
     val rExtUserDirPath = FileIO.perUserDir(RExtension.codeName)
 
     try {
-      // for reasons beyond my comprehension, loading the rjson package immediately after insalling does not work
-      // so... just install it in a separate script and then the real script can use it just fine.
-      // -Jeremy B April 2022
+      // see docs in `rlibs.R` for what this is about
       import scala.sys.process._
       Seq(rRuntimePath, rLibFilePath, rExtUserDirPath).!
       RExtension.rProcess = Subprocess.start(context.workspace,

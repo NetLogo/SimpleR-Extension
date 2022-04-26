@@ -1,6 +1,9 @@
-if (!suppressPackageStartupMessages(require("rjson"))) {
-  suppressPackageStartupMessages(install.packages("rjson", repos = "http://cran.us.r-project.org", quiet = TRUE))
-}
+rExtensionUserDirPath <- commandArgs(trailingOnly = TRUE)[2]
+rExtensionLibraryPath <- file.path(rExtensionUserDirPath, paste0("r-", R.version$major, ".", R.version$minor, "-library"))
+
+.libPaths(c(.libPaths(), rExtensionLibraryPath))
+
+suppressPackageStartupMessages(require("rjson"))
 
 # In
 quit_msg <- -1
@@ -70,7 +73,7 @@ handle_quit <- function(sock) {
   writeLines(toJSON(out_msg), sock)
 }
 
-server <- function(){
+server <- function() {
   port <- strtoi(commandArgs(trailingOnly=TRUE)[1])
   sock <- socketConnection(host="localhost",
                            port=port,

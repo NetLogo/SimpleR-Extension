@@ -4,5 +4,5 @@ extensions/
 target/
 *.zip
 *.jar
-/rext.r
+/*.R
 demos/my_simple_economy_histogram.png

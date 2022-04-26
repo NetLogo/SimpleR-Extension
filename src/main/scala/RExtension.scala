@@ -2,8 +2,9 @@ package org.nlogo.extensions.simpler
 
 import com.fasterxml.jackson.core.JsonParser
 import org.json4s.jackson.JsonMethods.mapper
+
 import org.nlogo.langextension.Subprocess
-import org.nlogo.api.{ Argument, Command, Context, DefaultClassManager, ExtensionException, ExtensionManager, PrimitiveManager, Reporter }
+import org.nlogo.api.{ Argument, Command, Context, DefaultClassManager, ExtensionException, ExtensionManager, FileIO, PrimitiveManager, Reporter }
 import org.nlogo.core.Syntax
 
 import java.io.File
@@ -69,6 +70,9 @@ object SetupR extends Command {
     dummySocket.close()
 
     val rExtensionDirectory = Config.getExtensionRuntimeDirectory(RExtension.codeName)
+    val maybeRLibFile       = new File(rExtensionDirectory, "rlibs.R")
+    val rLibFile            = if (maybeRLibFile.exists) { maybeRLibFile } else { (new File("rlibs.R")).getCanonicalFile }
+    val rLibFilePath        = rLibFile.toString
     val maybeRExtFile       = new File(rExtensionDirectory, "rext.R")
     val rExtFile            = if (maybeRExtFile.exists) { maybeRExtFile } else { (new File("rext.R")).getCanonicalFile }
     val rExtFilePath        = rExtFile.toString
@@ -80,11 +84,17 @@ object SetupR extends Command {
     val rRuntimePath = maybeRRuntimePath.getOrElse(
       throw new ExtensionException(s"We couldn't find an R executable file to run.  Please make sure R is installed on your system.  Then you can tell the ${RExtension.longName} where it's located by opening the SimplerR Extension menu and selecting Configure to choose the location yourself or putting making sure ${RExtension.extLangBin} is available on your PATH.\n")
     )
+    val rExtUserDirPath = FileIO.perUserDir(RExtension.codeName)
 
     try {
+      // for reasons beyond my comprehension, loading the rjson package immediately after insalling does not work
+      // so... just install it in a separate script and then the real script can use it just fine.
+      // -Jeremy B April 2022
+      import scala.sys.process._
+      Seq(rRuntimePath, rLibFilePath, rExtUserDirPath).!
       RExtension.rProcess = Subprocess.start(context.workspace,
         Seq(rRuntimePath),
-        Seq(rExtFilePath, port.toString),
+        Seq(rExtFilePath, port.toString, rExtUserDirPath),
         RExtension.codeName,
         RExtension.longName,
         Some(port))

@@ -43,14 +43,13 @@ object Config {
   }
 
   def getRuntimePath(extLangBin: String, maybeConfigPath: String, checkFlags: String*): Option[String] = {
-    val platformExtLangBin = extLangBin//s"$extLangBin${if (Platform.isWindows) { ".exe" } else { "" }}"
-    val configRuntimePath = Paths.get(maybeConfigPath.trim(), platformExtLangBin).toString
+    val configRuntimePath = Paths.get(maybeConfigPath.trim(), extLangBin).toString
     if (configRuntimePath != extLangBin && checkRuntimePath(configRuntimePath, checkFlags)) {
       Some(configRuntimePath)
     } else {
       // fallback to hoping it's on the PATH...
-      if (checkRuntimePath(platformExtLangBin, checkFlags)) {
-        Some(platformExtLangBin)
+      if (checkRuntimePath(extLangBin, checkFlags)) {
+        Some(extLangBin)
       } else {
         None
       }

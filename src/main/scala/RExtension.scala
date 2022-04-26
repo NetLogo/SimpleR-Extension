@@ -22,9 +22,9 @@ object RExtension {
   private var _rProcess: Option[Subprocess] = None
 
   def rProcess: Subprocess =
-    _rProcess.getOrElse(throw new ExtensionException((
+    _rProcess.getOrElse(throw new ExtensionException(
       "R process has not been started. Please run sr:setup first before any other SimpleR extension primitive"
-      )))
+      ))
 
   def rProcess_=(proc: Subprocess): Unit = {
     _rProcess.foreach(_.close())
@@ -53,7 +53,7 @@ class RExtension extends DefaultClassManager {
   }
 
   override def unload(em: ExtensionManager): Unit = {
-    super.unload(em);
+    super.unload(em)
     RExtension.killR()
     RExtension.menu.foreach(_.unload())
   }

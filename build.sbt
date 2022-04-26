@@ -12,10 +12,10 @@ netLogoExtName       := "sr"
 netLogoPackageExtras += (baseDirectory.value / "src" / "rext.R", None)
 netLogoZipExtras    ++= Seq(baseDirectory.value / "demos", baseDirectory.value / "README.md")
 
-scalaVersion           := "2.12.12"
-scalaSource in Test    := baseDirectory.value / "src" / "test"
-scalaSource in Compile := baseDirectory.value / "src" / "main"
-scalacOptions         ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-Xlint")
+scalaVersion          := "2.12.12"
+Test / scalaSource    := baseDirectory.value / "src" / "test"
+Compile / scalaSource := baseDirectory.value / "src" / "main"
+scalacOptions        ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-Xlint")
 
 Compile / packageBin / artifactPath := {
   val oldPath = (Compile / packageBin / artifactPath).value.toPath

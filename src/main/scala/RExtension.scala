@@ -101,7 +101,7 @@ object SetupR extends Command {
     } catch {
       case e: Exception => {
         println(e)
-        throw new ExtensionException(s"""The ${RExtension.longName} didn't want to start.  Make sure that the rjson package is installed for use by R: `install.packages("rjson", repos = "http://cran.us.r-project.org", quiet = TRUE)`.""", e)
+        throw new ExtensionException(s"""The ${RExtension.longName} didn't want to start.  Make sure you are using version 4 of R.  You can also try to manually install the rjson package is installed for use by R: `install.packages("rjson", repos = "http://cran.us.r-project.org", quiet = TRUE)`.""", e)
       }
     }
   }

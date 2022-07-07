@@ -23,7 +23,7 @@ Compile / packageBin / artifactPath := {
   newPath.toFile
 }
 
-resolvers           += "netlogo-lang-extension" at "https://dl.cloudsmith.io/public/netlogo/netlogoextensionlanguageserverlibrary/maven"
+resolvers           += "netlogo-lang-extension" at "https://dl.cloudsmith.io/public/netlogo/language-library/maven"
 libraryDependencies ++= Seq(
-  "org.nlogo.langextension" %% "lang-extension-lib" % "0.4.0"
+  "org.nlogo.languagelibrary" %% "language-library" % "1.0.0"
 )

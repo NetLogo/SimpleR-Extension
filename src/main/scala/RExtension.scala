@@ -3,7 +3,7 @@ package org.nlogo.extensions.simpler
 import com.fasterxml.jackson.core.JsonParser
 import org.json4s.jackson.JsonMethods.mapper
 
-import org.nlogo.langextension.Subprocess
+import org.nlogo.languagelibrary.Subprocess
 import org.nlogo.api.{ Argument, Command, Context, DefaultClassManager, ExtensionException, ExtensionManager, FileIO, PrimitiveManager, Reporter }
 import org.nlogo.core.Syntax
 

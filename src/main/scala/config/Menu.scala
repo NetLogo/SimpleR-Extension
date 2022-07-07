@@ -4,7 +4,7 @@ import javax.swing.JMenu
 
 import org.nlogo.app.App
 
-import org.nlogo.langextension.ShellWindow
+import org.nlogo.languagelibrary.ShellWindow
 
 object Menu {
 

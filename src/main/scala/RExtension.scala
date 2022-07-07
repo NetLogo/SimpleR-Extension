@@ -4,13 +4,12 @@ import com.fasterxml.jackson.core.JsonParser
 import org.json4s.jackson.JsonMethods.mapper
 
 import org.nlogo.languagelibrary.Subprocess
+import org.nlogo.languagelibrary.config.{ Config, Menu }
 import org.nlogo.api.{ Argument, Command, Context, DefaultClassManager, ExtensionException, ExtensionManager, FileIO, PrimitiveManager, Reporter }
 import org.nlogo.core.Syntax
 
 import java.io.File
 import java.net.ServerSocket
-
-import org.nlogo.extensions.simpler.config.{ Config, Menu }
 
 object RExtension {
   val codeName   = "sr"
@@ -18,7 +17,7 @@ object RExtension {
   val extLangBin = "Rscript"
 
   var menu: Option[Menu] = None
-  val config: Config     = Config.createForPropertyFile(RExtension.codeName)
+  val config: Config     = Config.createForPropertyFile(classOf[RExtension], RExtension.codeName)
 
   private var _rProcess: Option[Subprocess] = None
 
@@ -50,6 +49,7 @@ class RExtension extends DefaultClassManager {
   override def runOnce(em: ExtensionManager): Unit = {
     super.runOnce(em)
     mapper.configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true)
+
     RExtension.menu = Menu.create(RExtension.longName, RExtension.extLangBin, RExtension.config)
   }
 
@@ -69,7 +69,7 @@ object SetupR extends Command {
     val port = dummySocket.getLocalPort
     dummySocket.close()
 
-    val rExtensionDirectory = Config.getExtensionRuntimeDirectory(RExtension.codeName)
+    val rExtensionDirectory = Config.getExtensionRuntimeDirectory(classOf[RExtension], RExtension.codeName)
     // see docs in `rlibs.R` for what this is about
     val maybeRLibFile       = new File(rExtensionDirectory, "rlibs.R")
     val rLibFile            = if (maybeRLibFile.exists) { maybeRLibFile } else { (new File("rlibs.R")).getCanonicalFile }

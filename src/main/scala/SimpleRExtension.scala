@@ -11,13 +11,13 @@ import org.nlogo.core.Syntax
 import java.io.File
 import java.net.ServerSocket
 
-object RExtension {
+object SimpleRExtension {
   val codeName   = "sr"
   val longName   = "SimpleR Extension"
   val extLangBin = "Rscript"
 
   var menu: Option[Menu] = None
-  val config: Config     = Config.createForPropertyFile(classOf[RExtension], RExtension.codeName)
+  val config: Config     = Config.createForPropertyFile(classOf[SimpleRExtension], SimpleRExtension.codeName)
 
   private var _rProcess: Option[Subprocess] = None
 
@@ -38,7 +38,7 @@ object RExtension {
 
 }
 
-class RExtension extends DefaultClassManager {
+class SimpleRExtension extends DefaultClassManager {
   def load(manager: PrimitiveManager): Unit = {
     manager.addPrimitive("setup", SetupR)
     manager.addPrimitive("run", Run)
@@ -50,13 +50,13 @@ class RExtension extends DefaultClassManager {
     super.runOnce(em)
     mapper.configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true)
 
-    RExtension.menu = Menu.create(RExtension.longName, RExtension.extLangBin, RExtension.config)
+    SimpleRExtension.menu = Menu.create(SimpleRExtension.longName, SimpleRExtension.extLangBin, SimpleRExtension.config)
   }
 
   override def unload(em: ExtensionManager): Unit = {
     super.unload(em)
-    RExtension.killR()
-    RExtension.menu.foreach(_.unload())
+    SimpleRExtension.killR()
+    SimpleRExtension.menu.foreach(_.unload())
   }
 
 }
@@ -69,7 +69,7 @@ object SetupR extends Command {
     val port = dummySocket.getLocalPort
     dummySocket.close()
 
-    val rExtensionDirectory = Config.getExtensionRuntimeDirectory(classOf[RExtension], RExtension.codeName)
+    val rExtensionDirectory = Config.getExtensionRuntimeDirectory(classOf[SimpleRExtension], SimpleRExtension.codeName)
     // see docs in `rlibs.R` for what this is about
     val maybeRLibFile       = new File(rExtensionDirectory, "rlibs.R")
     val rLibFile            = if (maybeRLibFile.exists) { maybeRLibFile } else { (new File("rlibs.R")).getCanonicalFile }
@@ -78,30 +78,30 @@ object SetupR extends Command {
     val rExtFile            = if (maybeRExtFile.exists) { maybeRExtFile } else { (new File("rext.R")).getCanonicalFile }
     val rExtFilePath        = rExtFile.toString
     val maybeRRuntimePath   = Config.getRuntimePath(
-        RExtension.extLangBin
-      , RExtension.config.runtimePath.getOrElse("")
+        SimpleRExtension.extLangBin
+      , SimpleRExtension.config.runtimePath.getOrElse("")
       , "--version"
     )
     val rRuntimePath = maybeRRuntimePath.getOrElse(
-      throw new ExtensionException(s"We couldn't find an R executable file to run.  Please make sure R is installed on your system.  Then you can tell the ${RExtension.longName} where it's located by opening the SimplerR Extension menu and selecting Configure to choose the location yourself or putting making sure ${RExtension.extLangBin} is available on your PATH.\n")
+      throw new ExtensionException(s"We couldn't find an R executable file to run.  Please make sure R is installed on your system.  Then you can tell the ${SimpleRExtension.longName} where it's located by opening the SimplerR Extension menu and selecting Configure to choose the location yourself or putting making sure ${SimpleRExtension.extLangBin} is available on your PATH.\n")
     )
-    val rExtUserDirPath = FileIO.perUserDir(RExtension.codeName)
+    val rExtUserDirPath = FileIO.perUserDir(SimpleRExtension.codeName)
 
     try {
       // see docs in `rlibs.R` for what this is about
       import scala.sys.process._
       Seq(rRuntimePath, rLibFilePath, rExtUserDirPath).!
-      RExtension.rProcess = Subprocess.start(context.workspace,
+      SimpleRExtension.rProcess = Subprocess.start(context.workspace,
         Seq(rRuntimePath),
         Seq(rExtFilePath, port.toString, rExtUserDirPath),
-        RExtension.codeName,
-        RExtension.longName,
+        SimpleRExtension.codeName,
+        SimpleRExtension.longName,
         Some(port))
-      RExtension.menu.foreach(_.setup(RExtension.rProcess.evalStringified))
+      SimpleRExtension.menu.foreach(_.setup(SimpleRExtension.rProcess.evalStringified))
     } catch {
       case e: Exception => {
         println(e)
-        throw new ExtensionException(s"""The ${RExtension.longName} didn't want to start.  Make sure you are using version 4 of R.  You can also try to manually install the rjson package is installed for use by R: `install.packages("rjson", repos = "http://cran.us.r-project.org", quiet = TRUE)`.""", e)
+        throw new ExtensionException(s"""The ${SimpleRExtension.longName} didn't want to start.  Make sure you are using version 4 of R.  You can also try to manually install the rjson package is installed for use by R: `install.packages("rjson", repos = "http://cran.us.r-project.org", quiet = TRUE)`.""", e)
       }
     }
   }
@@ -113,7 +113,7 @@ object Run extends Command {
   )
 
   override def perform(args: Array[Argument], context: Context): Unit =
-    RExtension.rProcess.exec(args.map(_.getString).mkString("\n"))
+    SimpleRExtension.rProcess.exec(args.map(_.getString).mkString("\n"))
 }
 
 object RunResult extends Reporter {
@@ -123,11 +123,11 @@ object RunResult extends Reporter {
   )
 
   override def report(args: Array[Argument], context: Context): AnyRef =
-    RExtension.rProcess.eval(args.map(_.getString).mkString("\n"))
+    SimpleRExtension.rProcess.eval(args.map(_.getString).mkString("\n"))
 }
 
 object Set extends Command {
   override def getSyntax: Syntax = Syntax.commandSyntax(right = List(Syntax.StringType, Subprocess.convertibleTypesSyntax))
   override def perform(args: Array[Argument], context: Context): Unit =
-    RExtension.rProcess.assign(args(0).getString, args(1).get)
+    SimpleRExtension.rProcess.assign(args(0).getString, args(1).get)
 }

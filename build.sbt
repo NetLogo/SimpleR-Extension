@@ -3,7 +3,8 @@ import org.nlogo.build.{ ExtensionDocumentationPlugin, NetLogoExtension }
 enablePlugins(NetLogoExtension)
 enablePlugins(ExtensionDocumentationPlugin)
 
-version    := "1.0.0"
+name       := "Simple R Extension"
+version    := "1.0.1"
 isSnapshot := true
 
 netLogoVersion        := "6.2.2"

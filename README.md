@@ -13,8 +13,7 @@ If compilation succeeds, `sr.jar` will be created, and the required dependencies
 
 ## Using
 
-To run R code you must install R and have the `R` executable on your `PATH`.
-You can download R from [their site](https://www.r-project.org/).
+To run R code you must install R version 4.  You also must specify the location of your `R` executable using the SimpleR Extension > Configure menu in NetLogo after loading the `sr` extension, or have the `R` executable on your `PATH`.  You can download R from [their site](https://www.r-project.org/).
 
 To use this extension, you must first include it at the top of your NetLogo model code in an `extensions` declaration.
 

@@ -50,7 +50,7 @@ class SimpleRExtension extends DefaultClassManager {
     super.runOnce(em)
     mapper.configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true)
 
-    SimpleRExtension.menu = Menu.create(SimpleRExtension.longName, SimpleRExtension.extLangBin, SimpleRExtension.config)
+    SimpleRExtension.menu = Menu.create(em, SimpleRExtension.longName, SimpleRExtension.extLangBin, SimpleRExtension.config)
   }
 
   override def unload(em: ExtensionManager): Unit = {

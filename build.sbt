@@ -4,7 +4,7 @@ enablePlugins(NetLogoExtension)
 enablePlugins(ExtensionDocumentationPlugin)
 
 name       := "Simple R Extension"
-version    := "1.0.1"
+version    := "1.0.2"
 isSnapshot := true
 
 netLogoVersion        := "6.2.2"

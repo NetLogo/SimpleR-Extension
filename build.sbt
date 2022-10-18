@@ -7,16 +7,16 @@ name       := "Simple R Extension"
 version    := "1.0.2"
 isSnapshot := true
 
-netLogoVersion        := "6.2.2"
+netLogoVersion        := "6.3.0"
 netLogoClassManager   := "org.nlogo.extensions.simpler.SimpleRExtension"
 netLogoExtName        := "sr"
 netLogoPackageExtras ++= Seq((baseDirectory.value / "src" / "rext.R", None), (baseDirectory.value / "src" / "rlibs.R", None))
 netLogoZipExtras     ++= Seq(baseDirectory.value / "demos", baseDirectory.value / "README.md")
 
-scalaVersion          := "2.12.12"
+scalaVersion          := "2.12.17"
 Test / scalaSource    := baseDirectory.value / "src" / "test"
 Compile / scalaSource := baseDirectory.value / "src" / "main"
-scalacOptions        ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-Xlint")
+scalacOptions        ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-Xlint", "-release", "11")
 
 Compile / packageBin / artifactPath := {
   val oldPath = (Compile / packageBin / artifactPath).value.toPath

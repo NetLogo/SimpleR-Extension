@@ -71,16 +71,16 @@ object SetupR extends Command {
 
     val rExtensionDirectory = Config.getExtensionRuntimeDirectory(classOf[SimpleRExtension], SimpleRExtension.codeName)
     // see docs in `rlibs.R` for what this is about
-    val maybeRLibFile       = new File(rExtensionDirectory, "rlibs.R")
-    val rLibFile            = if (maybeRLibFile.exists) { maybeRLibFile } else { (new File("rlibs.R")).getCanonicalFile }
-    val rLibFilePath        = rLibFile.toString
-    val maybeRExtFile       = new File(rExtensionDirectory, "rext.R")
-    val rExtFile            = if (maybeRExtFile.exists) { maybeRExtFile } else { (new File("rext.R")).getCanonicalFile }
-    val rExtFilePath        = rExtFile.toString
-    val maybeRRuntimePath   = Config.getRuntimePath(
-        SimpleRExtension.extLangBin
-      , SimpleRExtension.config.runtimePath.getOrElse("")
-      , "--version"
+    val maybeRLibFile     = new File(rExtensionDirectory, "rlibs.R")
+    val rLibFile          = if (maybeRLibFile.exists) { maybeRLibFile } else { (new File("rlibs.R")).getCanonicalFile }
+    val rLibFilePath      = rLibFile.toString
+    val maybeRExtFile     = new File(rExtensionDirectory, "rext.R")
+    val rExtFile          = if (maybeRExtFile.exists) { maybeRExtFile } else { (new File("rext.R")).getCanonicalFile }
+    val rExtFilePath      = rExtFile.toString
+    val maybeRRuntimePath = Config.getRuntimePath(
+      SimpleRExtension.extLangBin
+    , SimpleRExtension.config.runtimePath.getOrElse("")
+    , "--version"
     )
     val rRuntimePath = maybeRRuntimePath.getOrElse(
       throw new ExtensionException(s"We couldn't find an R executable file to run.  Please make sure R is installed on your system.  Then you can tell the ${SimpleRExtension.longName} where it's located by opening the SimplerR Extension menu and selecting Configure to choose the location yourself or putting making sure ${SimpleRExtension.extLangBin} is available on your PATH.\n")
@@ -91,12 +91,14 @@ object SetupR extends Command {
       // see docs in `rlibs.R` for what this is about
       import scala.sys.process._
       Seq(rRuntimePath, rLibFilePath, rExtUserDirPath).!
-      SimpleRExtension.rProcess = Subprocess.start(context.workspace,
-        Seq(rRuntimePath),
-        Seq(rExtFilePath, port.toString, rExtUserDirPath),
-        SimpleRExtension.codeName,
-        SimpleRExtension.longName,
-        Some(port))
+      SimpleRExtension.rProcess = Subprocess.start(
+        context.workspace
+      , Seq(rRuntimePath)
+      , Seq(rExtFilePath, port.toString, rExtUserDirPath)
+      , SimpleRExtension.codeName
+      , SimpleRExtension.longName
+      , Some(port)
+      )
       SimpleRExtension.menu.foreach(_.setup(SimpleRExtension.rProcess.evalStringified))
     } catch {
       case e: Exception => {

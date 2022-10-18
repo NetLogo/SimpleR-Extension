@@ -23,43 +23,55 @@ heartbeat_response_msg <- 4
 env <- new.env(parent = parent.env(environment()))
 
 eval_wrapper <- function(s) {
-  eval(parse(text=s), envir=env)
+  eval(parse(text = s), envir = env)
 }
 
 send_error <- function(sock, message, longMessage) {
-  err_msg <- list(type = err_msg,
-                  body = list(message = message,
-                              longMessage = paste(longMessage, "\n")))
+  err_msg <- list(
+    type = err_msg
+  , body = list(
+      message = message
+    , longMessage = paste(longMessage, "\n")
+    )
+  )
   writeLines(toJSON(err_msg), sock)
 }
 
 handle_statememt <- function(sock, body) {
   eval_wrapper(body)
-  out_msg <- list(type = succ_msg,
-                  body = "")
+  out_msg <- list(
+    type = succ_msg
+  , body = ""
+  )
   writeLines(toJSON(out_msg), sock)
 }
 
 handle_expression <- function(sock, body) {
   res <- eval_wrapper(body)
-  out_msg <- list(type = succ_msg,
-                  body = res)
+  out_msg <- list(
+    type = succ_msg
+  , body = res
+  )
   writeLines(toJSON(out_msg), sock)
 }
 
 handle_expression_stringified <- function(sock, body){
   res <- toString(eval_wrapper(body))
-  out_msg <- list(type = succ_msg,
-                  body = res)
+  out_msg <- list(
+    type = succ_msg
+  , body = res
+  )
   writeLines(toJSON(out_msg), sock)
 }
 
 handle_assignment <- function(sock, body) {
   varName <- body$varName
   value   <- body$value
-  assign(varName, value, envir=env)
-  out_msg <- list(type = succ_msg,
-                  body = "")
+  assign(varName, value, envir = env)
+  out_msg <- list(
+    type = succ_msg
+  , body = ""
+  )
   writeLines(toJSON(out_msg), sock)
 }
 
@@ -75,18 +87,20 @@ handle_quit <- function(sock) {
 
 server <- function() {
   port <- strtoi(commandArgs(trailingOnly=TRUE)[1])
-  sock <- socketConnection(host="localhost",
-                           port=port,
-                           blocking=TRUE,
-                           server=TRUE,
-                           open="r+")
+  sock <- socketConnection(
+    host="localhost"
+  , port = port
+  , blocking = TRUE
+  , server = TRUE
+  , open = "r+"
+  )
 
   active <- TRUE
   while(active) {
     tryCatch({
       msg_line <- readLines(sock, 1)
       if (length(msg_line) != 0) {
-        msg_parsed <- fromJSON(json_str=msg_line, simplify=FALSE)
+        msg_parsed <- fromJSON(json_str = msg_line, simplify = FALSE)
         msg_type <- msg_parsed$type
 
         if (msg_type == heartbeat_request_msg) {
@@ -113,14 +127,17 @@ server <- function() {
         }
       }
     },
-    error=function(e) {
+
+    error = function(e) {
       send_error(sock, e$message, e$message)
     },
-    warning=function(w) {
+
+    warning = function(w) {
       writeLines("warning")
       writeLines(w$message)
     })
   }
+
   close(sock)
 }
 

@@ -13,6 +13,11 @@ assn_msg <- 2
 expr_stringified_msg <- 3
 heartbeat_request_msg <- 4
 
+# In - Custom
+
+set_named_list_msg <- 900
+set_data_frame_msg <- 901
+
 # Out
 succ_msg <- 0
 err_msg <- 1
@@ -75,6 +80,42 @@ handle_assignment <- function(sock, body) {
   writeLines(toJSON(out_msg), sock)
 }
 
+handle_set_named_list <- function(sock, body) {
+  var_name   <- body$varName
+  names_vec  <- unlist(body$names)
+  named_list <- setNames(body$values, names_vec)
+  assign(var_name, named_list, envir = env)
+  out_msg <- list(
+    type = succ_msg
+  , body = ""
+  )
+  writeLines(toJSON(out_msg), sock)
+}
+
+handle_set_data_frame <- function(sock, body) {
+  var_name <- body$varName
+  names    <- body$names
+  rows     <- body$rows
+  # For reasons exceeding my R knowledge, if you use the named lists method with a single row, then the `toJSON()` on
+  # the result gives you something like `{ x: ["x", 20] }`, double-listing the variable/column name.  With more than 1 row,
+  # it's fine: `{ x: [20, 30, 40] }`.  If you try to use the naive list of lists method with more than 1 row, on the other
+  # hand, `as.data.frame()` tries to give each element of each row a separate column (???)  -Jeremy B October 2022
+  if (length(rows) < 2) {
+    df <- as.data.frame(rows)
+    colnames(df) = lapply(names, c)
+  } else {
+    names_vec    <- unlist(names)
+    named_values <- lapply(rows, function(r) { setNames(r, names_vec) })
+    df <- as.data.frame(do.call(rbind, named_values))
+  }
+  assign(var_name, df, envir = env)
+  out_msg <- list(
+    type = succ_msg
+  , body = ""
+  )
+  writeLines(toJSON(out_msg), sock)
+}
+
 handle_heartbeat <- function(sock) {
   out_msg <- list(type = heartbeat_response_msg)
   writeLines(toJSON(out_msg), sock)
@@ -88,7 +129,7 @@ handle_quit <- function(sock) {
 server <- function() {
   port <- strtoi(commandArgs(trailingOnly=TRUE)[1])
   sock <- socketConnection(
-    host="localhost"
+    host = "localhost"
   , port = port
   , blocking = TRUE
   , server = TRUE
@@ -121,6 +162,12 @@ server <- function() {
         } else if (msg_type == quit_msg) {
           active <- FALSE
           handle_quit(sock)
+
+        } else if (msg_type == set_named_list_msg) {
+          handle_set_named_list(sock, msg_parsed$body)
+
+        } else if (msg_type == set_data_frame_msg) {
+          handle_set_data_frame(sock, msg_parsed$body)
 
         } else {
           send_error("Bad message type: ", toString(msg_type), "")

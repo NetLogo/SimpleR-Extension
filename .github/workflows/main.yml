@@ -13,7 +13,7 @@ jobs:
 
       - uses: olafurpg/setup-scala@v10
         with:
-          java-version: adopt@1.8
+          java-version: openjdk@1.17.0
 
       - uses: r-lib/actions/setup-r@v2
 

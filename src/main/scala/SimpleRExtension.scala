@@ -9,11 +9,17 @@ import org.nlogo.languagelibrary.config.{ Config, Menu }
 import org.nlogo.agent.{ Agent, AgentSet }
 import org.nlogo.api.{ Argument, Command, Context, DefaultClassManager, ExtensionException, ExtensionManager, FileIO, PrimitiveManager, Reporter }
 import org.nlogo.core.{ LogoList, Syntax }
+import org.nlogo.workspace.{ AbstractWorkspace, ExtensionManager => WorkspaceExtensionManager }
 
+import java.awt.GraphicsEnvironment
 import java.io.File
 import java.net.ServerSocket
 
 object SimpleRExtension {
+  private var isHeadlessWorkspace = false
+  def isHeadless: Boolean =
+    isHeadlessWorkspace || GraphicsEnvironment.isHeadless || "true".equals(System.getProperty("org.nlogo.preferHeadless"))
+
   val codeName   = "sr"
   val longName   = "SimpleR Extension"
   val extLangBin = "Rscript"
@@ -58,12 +64,21 @@ class SimpleRExtension extends DefaultClassManager {
     manager.addPrimitive("set-agent", SetAgent)
     manager.addPrimitive("set-agent-data-frame", SetAgentDataFrame)
 
-    // primManager.addPrimitive("setPlotDevice", new SetPlotDevice());
+    manager.addPrimitive("set-plot-device", SetPlotDevice)
   }
 
   override def runOnce(em: ExtensionManager): Unit = {
     super.runOnce(em)
+
     mapper.configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true)
+    // "Can't we just check the `org.nlogo.preferHeadless` property?"  Well, kind-of, but
+    // it turns out that doesn't get set automatically and there are a lot of ways to run
+    // NetLogo models headlessly that "forget" to do it.  It's safer to check if the
+    // workspace we're using is headless in addition to checking the property.  -Jeremy B
+    // July 2022
+    SimpleRExtension.isHeadlessWorkspace = em.isInstanceOf[WorkspaceExtensionManager] &&
+      em.asInstanceOf[WorkspaceExtensionManager].workspace.isInstanceOf[AbstractWorkspace] &&
+      em.asInstanceOf[WorkspaceExtensionManager].workspace.asInstanceOf[AbstractWorkspace].isHeadless
 
     SimpleRExtension.menu = Menu.create(em, SimpleRExtension.longName, SimpleRExtension.extLangBin, SimpleRExtension.config)
   }
@@ -286,5 +301,23 @@ object SetAgentDataFrame extends Command {
     val values = SimpleRExtension.rProcess.convert.toJson(agents)
     val body   = ("varName" -> varName) ~ ("rows" -> values) ~ ("names" -> names)
     SimpleRExtension.rProcess.genericJson(SimpleRExtension.MessageIds.SET_DATA_FRAME, body)
+  }
+}
+
+object SetPlotDevice extends Command {
+  override def getSyntax: Syntax = Syntax.commandSyntax(right = List())
+
+  override def perform(args: Array[Argument], context: Context): Unit = {
+    if (!SimpleRExtension.isHeadless) {
+      val osName = System.getProperty("os.name").toLowerCase
+
+      val plotDeviceCommand = osName.substring(0, 3) match {
+        case "win" => "windows()"
+        case "mac" => "quartz()"
+        case _     => "x11()"
+      }
+
+      SimpleRExtension.rProcess.exec(plotDeviceCommand)
+    }
   }
 }

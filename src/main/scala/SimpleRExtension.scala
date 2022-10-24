@@ -5,20 +5,17 @@ import org.json4s.jackson.JsonMethods.mapper
 import org.json4s.JsonDSL._
 
 import org.nlogo.languagelibrary.Subprocess
-import org.nlogo.languagelibrary.config.{ Config, Menu }
+import org.nlogo.languagelibrary.config.{ Config, Menu, Platform }
 import org.nlogo.agent.{ Agent, AgentSet }
 import org.nlogo.api.{ Argument, Command, Context, DefaultClassManager, ExtensionException, ExtensionManager, FileIO, PrimitiveManager, Reporter }
 import org.nlogo.core.{ LogoList, Syntax }
-import org.nlogo.workspace.{ AbstractWorkspace, ExtensionManager => WorkspaceExtensionManager }
 
-import java.awt.GraphicsEnvironment
 import java.io.File
 import java.net.ServerSocket
 
 object SimpleRExtension {
-  private var isHeadlessWorkspace = false
-  def isHeadless: Boolean =
-    isHeadlessWorkspace || GraphicsEnvironment.isHeadless || "true".equals(System.getProperty("org.nlogo.preferHeadless"))
+  private var _isHeadless: Boolean = false
+  def isHeadless: Boolean = _isHeadless
 
   val codeName   = "sr"
   val longName   = "SimpleR Extension"
@@ -71,16 +68,9 @@ class SimpleRExtension extends DefaultClassManager {
     super.runOnce(em)
 
     mapper.configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true)
-    // "Can't we just check the `org.nlogo.preferHeadless` property?"  Well, kind-of, but
-    // it turns out that doesn't get set automatically and there are a lot of ways to run
-    // NetLogo models headlessly that "forget" to do it.  It's safer to check if the
-    // workspace we're using is headless in addition to checking the property.  -Jeremy B
-    // July 2022
-    SimpleRExtension.isHeadlessWorkspace = em.isInstanceOf[WorkspaceExtensionManager] &&
-      em.asInstanceOf[WorkspaceExtensionManager].workspace.isInstanceOf[AbstractWorkspace] &&
-      em.asInstanceOf[WorkspaceExtensionManager].workspace.asInstanceOf[AbstractWorkspace].isHeadless
 
-    SimpleRExtension.menu = Menu.create(em, SimpleRExtension.longName, SimpleRExtension.extLangBin, SimpleRExtension.config)
+    SimpleRExtension._isHeadless = Platform.isHeadless(em)
+    SimpleRExtension.menu        = Menu.create(em, SimpleRExtension.longName, SimpleRExtension.extLangBin, SimpleRExtension.config)
   }
 
   override def unload(em: ExtensionManager): Unit = {

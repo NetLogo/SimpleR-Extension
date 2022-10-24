@@ -160,3 +160,8 @@ SetAgentDataFrame4
   O> (sr:set-agent-data-frame "a" turtles "color" "heading" "shape")
   sr:runresult "a" => [["color" [15 105]] ["heading" [90 180]] ["shape" ["arrow" "wolf"]]]
   sr:runresult "class(a)" => "data.frame"
+
+SetPlotDeviceDoesNotCrashHeadless
+  extensions [ sr ]
+  O> sr:setup
+  O> sr:set-plot-device

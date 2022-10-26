@@ -39,6 +39,12 @@ lazy val commonSettings = Seq(
 , )
 )
 
+lazy val root = (project in file("."))
+  .settings(
+    Compile / skip := true
+  , Test    / skip := true
+  )
+
 lazy val simpleR = (project in file("root-simple-r"))
   .settings(commonSettings: _*)
   .settings(

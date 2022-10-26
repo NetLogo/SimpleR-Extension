@@ -18,4 +18,4 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
 
       - run: sbt -v update compile
-      - run: sbt -v test
+      - run: sbt -v simpleR/test deprecatedR/test

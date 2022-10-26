@@ -5,4 +5,6 @@ target/
 *.zip
 *.jar
 /*.R
+/root-deprecated-r/*.R
+/root-simple-r/*.R
 demos/my_simple_economy_histogram.png

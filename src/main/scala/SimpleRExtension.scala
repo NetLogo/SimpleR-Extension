@@ -17,8 +17,21 @@ object SimpleRExtension {
   private var _isHeadless: Boolean = false
   def isHeadless: Boolean = _isHeadless
 
-  val codeName   = "sr"
-  val longName   = "SimpleR Extension"
+  private var _codeName = "sr"
+  def codeName: String = _codeName
+
+  private var _longName = "SimpleR Extension"
+  def longName: String = _longName
+
+  private var _extensionClass: Class[_] = classOf[SimpleRExtension]
+  def extensionClass: Class[_] = _extensionClass
+
+  def resetProps(codeName: String, longName: String, extensionClass: Class[_]) = {
+    _codeName       = codeName
+    _longName       = longName
+    _extensionClass = extensionClass
+  }
+
   val extLangBin = "Rscript"
 
   object MessageIds {
@@ -27,7 +40,8 @@ object SimpleRExtension {
   }
 
   var menu: Option[Menu] = None
-  val config: Config     = Config.createForPropertyFile(classOf[SimpleRExtension], SimpleRExtension.codeName)
+  def config: Config =
+    Config.createForPropertyFile(SimpleRExtension.extensionClass, SimpleRExtension.codeName)
 
   private var _rProcess: Option[Subprocess] = None
 
@@ -89,7 +103,7 @@ object SetupR extends Command {
     val port = dummySocket.getLocalPort
     dummySocket.close()
 
-    val rExtensionDirectory = Config.getExtensionRuntimeDirectory(classOf[SimpleRExtension], SimpleRExtension.codeName)
+    val rExtensionDirectory = Config.getExtensionRuntimeDirectory(SimpleRExtension.extensionClass, SimpleRExtension.codeName)
     // see docs in `rlibs.R` for what this is about
     val maybeRLibFile     = new File(rExtensionDirectory, "rlibs.R")
     val rLibFile          = if (maybeRLibFile.exists) { maybeRLibFile } else { (new File("rlibs.R")).getCanonicalFile }

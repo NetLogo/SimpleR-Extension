@@ -1,30 +1,61 @@
 import org.nlogo.build.{ ExtensionDocumentationPlugin, NetLogoExtension }
 
-enablePlugins(NetLogoExtension)
-enablePlugins(ExtensionDocumentationPlugin)
+name := "Simple R Extension"
 
-name       := "Simple R Extension"
-version    := "1.0.2"
-isSnapshot := true
+lazy val rScriptFiles   = settingKey[Seq[File]]("list of R scripts to include in package and testing")
+lazy val commonSettings = Seq(
+  version    := "1.0.2"
+, isSnapshot := true
 
-netLogoVersion        := "6.3.0"
-netLogoClassManager   := "org.nlogo.extensions.simpler.SimpleRExtension"
-netLogoExtName        := "sr"
-netLogoPackageExtras ++= Seq((baseDirectory.value / "src" / "rext.R", None), (baseDirectory.value / "src" / "rlibs.R", None))
-netLogoZipExtras     ++= Seq(baseDirectory.value / "demos", baseDirectory.value / "README.md")
+, rScriptFiles := Seq(baseDirectory.value / ".." / "src" / "rext.R", baseDirectory.value / ".." / "src" / "rlibs.R")
 
-scalaVersion          := "2.12.17"
-Test / scalaSource    := baseDirectory.value / "src" / "test"
-Compile / scalaSource := baseDirectory.value / "src" / "main"
-scalacOptions        ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-Xlint", "-release", "11")
+, netLogoVersion        := "6.3.0"
+, netLogoPackageExtras ++= rScriptFiles.value.map( (f) => (f, None) )
+, netLogoZipExtras     ++= Seq(baseDirectory.value / ".." / "demos", baseDirectory.value / ".." / "README.md")
 
-Compile / packageBin / artifactPath := {
-  val oldPath = (Compile / packageBin / artifactPath).value.toPath
-  val newPath = oldPath.getParent / s"${netLogoExtName.value}.jar"
-  newPath.toFile
-}
+, scalaVersion          := "2.12.17"
+, Test / scalaSource    := baseDirectory.value / "test"
+, Compile / scalaSource := baseDirectory.value / ".." / "src" / "main"
+, scalacOptions        ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-Xlint", "-release", "11")
 
-resolvers           += "netlogo-lang-extension" at "https://dl.cloudsmith.io/public/netlogo/language-library/maven"
-libraryDependencies ++= Seq(
-  "org.nlogo.languagelibrary" %% "language-library" % "2.1.0"
+, Compile / packageBin / artifactPath := {
+    val oldPath = (Compile / packageBin / artifactPath).value.toPath
+    val newPath = oldPath.getParent / s"${netLogoExtName.value}.jar"
+    newPath.toFile
+  }
+
+, (Test / testOptions) ++= Seq(
+    Tests.Setup( () => {
+      rScriptFiles.value.foreach( (file) => IO.copyFile(file, baseDirectory.value / ".." / file.getName) )
+    })
+  , Tests.Cleanup( () => {
+      rScriptFiles.value.foreach( (file) => IO.delete(baseDirectory.value / ".." / file.getName) )
+    })
+  )
+
+, resolvers += "netlogo-lang-extension" at "https://dl.cloudsmith.io/public/netlogo/language-library/maven"
+, libraryDependencies ++= Seq(
+    "org.nlogo.languagelibrary" %% "language-library" % "2.1.0"
+, )
 )
+
+lazy val simpleR = (project in file("root-simple-r"))
+  .settings(commonSettings: _*)
+  .settings(
+    name := "Simple R Extension"
+  , netLogoClassManager   := "org.nlogo.extensions.simpler.SimpleRExtension"
+  , netLogoExtName        := "sr"
+  )
+  .enablePlugins(NetLogoExtension)
+  .enablePlugins(ExtensionDocumentationPlugin)
+
+lazy val deprecatedR = (project in file("root-deprecated-r"))
+  .settings(commonSettings: _*)
+  .settings(
+    name := "R Extension (Deprecated)"
+  , netLogoClassManager   := "org.nlogo.extensions.simpler.DeprecatedRExtension"
+  , netLogoExtName        := "r"
+  , netLogoLongDescription := "Deprecated!  Please use Simple R extensions instead."
+  )
+  .enablePlugins(NetLogoExtension)
+  .enablePlugins(ExtensionDocumentationPlugin)

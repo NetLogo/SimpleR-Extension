@@ -34,7 +34,6 @@ class DeprecatedRExtension extends SimpleRExtension {
 
     // should be re-implemented
     // manager.addPrimitive("interactiveShell", new interactiveShell())
-    // manager.addPrimitive("r-home", new DebugPrim(new RPath()))
 
     // can't or won't be re-implemented
     // manager.addPrimitive("gc", new GC())

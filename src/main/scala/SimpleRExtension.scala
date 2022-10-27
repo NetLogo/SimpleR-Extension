@@ -78,6 +78,9 @@ class SimpleRExtension extends DefaultClassManager {
     manager.addPrimitive("set-agent-data-frame", SetAgentDataFrame)
 
     manager.addPrimitive("set-plot-device", SetPlotDevice)
+
+    manager.addPrimitive("r-home", RHome)
+
   }
 
   override def runOnce(em: ExtensionManager): Unit = {
@@ -143,6 +146,14 @@ object SetupR extends Command {
       }
     }
   }
+}
+
+object RHome extends Reporter {
+  override def getSyntax = Syntax.reporterSyntax(right = List(), ret = Syntax.StringType)
+
+  override def report(args: Array[Argument], context: Context): AnyRef =
+    SimpleRExtension.rProcess.eval("R.home()")
+
 }
 
 object Run extends Command {

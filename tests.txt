@@ -18,6 +18,14 @@ DefaultEnvironment
   O> (sr:run "library(datasets)" "data(iris)")
   sr:runresult "head(iris, 2)" => [["Sepal.Length" [5.1 4.9]] ["Sepal.Width" [3.5 3]] ["Petal.Length" [1.4 1.4]] ["Petal.Width" [0.2 0.2]] ["Species" ["setosa" "setosa"]]]
 
+# The path will be different when the test is run on different platforms, so we just make sure it doesn't fail.
+RHomeDoesNotErrorWhenSetup
+  extensions [ sr ]
+  globals [ r-home ]
+  O> sr:setup
+  O> set r-home sr:r-home
+  length r-home > 0 => true
+
 StopThrowsExtensionException
   extensions [ sr ]
   O> sr:setup

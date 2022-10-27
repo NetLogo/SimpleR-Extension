@@ -31,9 +31,7 @@ class DeprecatedRExtension extends SimpleRExtension {
     manager.addPrimitive("clearLocal", DeprecatedCommand("clearLocal", SetupR, pleaseUse("setup")))
 
     manager.addPrimitive("setPlotDevice", DeprecatedCommand("setPlotDevice", SetPlotDevice, pleaseUse("set-plot-device")))
-
-    // should be re-implemented
-    // manager.addPrimitive("interactiveShell", new interactiveShell())
+    manager.addPrimitive("interactiveShell", DeprecatedCommand("interactiveShell", ShowConsole, pleaseUse("show-console")))
 
     val noLongerRequired =
       "No equivalent exists for this primitive in the Simple R Extension as it is no longer required.  You can safely remove this from your code."

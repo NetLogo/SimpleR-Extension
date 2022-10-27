@@ -26,6 +26,11 @@ RHomeDoesNotErrorWhenSetup
   O> set r-home sr:r-home
   length r-home > 0 => true
 
+ShowShellDoesNotErrorHeadless
+  extensions [ sr ]
+  O> sr:setup
+  O> sr:show-console
+
 StopThrowsExtensionException
   extensions [ sr ]
   O> sr:setup

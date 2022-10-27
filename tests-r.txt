@@ -84,3 +84,10 @@ SetPlotDevice
   extensions [ r ]
   O> r:setup
   O> r:setPlotDevice
+
+Unimplemented
+  extensions [ r ]
+  O> r:setup
+  O> r:gc
+  O> r:stop
+  r:jri-path => ""

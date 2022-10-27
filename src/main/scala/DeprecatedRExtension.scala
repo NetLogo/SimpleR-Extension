@@ -35,10 +35,11 @@ class DeprecatedRExtension extends SimpleRExtension {
     // should be re-implemented
     // manager.addPrimitive("interactiveShell", new interactiveShell())
 
-    // can't or won't be re-implemented
-    // manager.addPrimitive("gc", new GC())
-    // manager.addPrimitive("stop", new Stop())
-    // manager.addPrimitive("jri-path", new DebugPrim(new JRIPath()))
+    val noLongerRequired =
+      "No equivalent exists for this primitive in the Simple R Extension as it is no longer required.  You can safely remove this from your code."
+    manager.addPrimitive("gc", DeprecatedCommand("gc", DummyCommand, noLongerRequired))
+    manager.addPrimitive("stop", DeprecatedCommand("stop", DummyCommand, noLongerRequired))
+    manager.addPrimitive("jri-path", DeprecatedReporter("jri-path", DummyStringReporter(""), noLongerRequired))
   }
 
   override def runOnce(em: ExtensionManager): Unit = {
@@ -67,6 +68,16 @@ object DeprecatedRExtension {
   def createMessage(primName: String, deprecationMessage: String): String = {
     s"$deprecationMessage\n\nThe R extension and `r:$primName` are deprecated and will be removed from a future version of NetLogo.  The Simple R extension is its replacement, and it includes all of the same functionality with a much easier setup.  This version of the R extension is actually using the Simple R extension's code, but with the old R extension primitive names.\n\nPlease see the Simple R extension documentation for more info: https://github.com/NetLogo/SimpleR-Extension/blob/main/README.md#using"
   }
+}
+
+object DummyCommand extends Command {
+  override def getSyntax: Syntax = Syntax.commandSyntax(right = List())
+  override def perform(args: Array[Argument], context: Context): Unit = {}
+}
+
+case class DummyStringReporter(string: String) extends Reporter {
+  override def getSyntax: Syntax = Syntax.reporterSyntax(right = List(), ret = Syntax.StringType)
+  override def report(args: Array[Argument], context: Context): AnyRef = string
 }
 
 case class DeprecatedCommand(primName: String, prim: Command, deprecationMessage: String) extends Command {

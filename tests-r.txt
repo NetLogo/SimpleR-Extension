@@ -4,3 +4,83 @@ SmokeTest
   r:get "1:3" => [1 2 3]
   O> r:put "x" "hello!"
   r:get "x" => "hello!"
+
+Eval
+  extensions [ r ]
+  O> r:setup
+  O> r:eval "x <- 100"
+  r:get "x" => 100
+
+PutList
+  extensions [ r ]
+  O> r:setup
+  O> r:putList "a" 10
+  r:get "a" => [10]
+  r:get "class(a)" => "list"
+  O> (r:putList "a" 10 20 30)
+  r:get "a" => [10 20 30]
+  r:get "class(a)" => "list"
+
+PutNamedList
+  extensions [ r ]
+  O> r:setup
+  O> r:putNamedList "a" "x" 10
+  r:get "a" => [["x" 10]]
+  r:get "class(a)" => "list"
+  O> (r:putNamedList "a" "x" 10 "y" 20 "z" 30)
+  r:get "a" => [["x" 10] ["y" 20] ["z" 30]]
+  r:get "class(a)" => "list"
+
+PutDataFrame
+  extensions [ r ]
+  O> r:setup
+  O> r:putDataframe "a" "x" 10
+  r:runresult "a" => [["x" 10]]
+  r:get "class(a)" => "data.frame"
+  O> (r:putDataframe "a" "x" 10 "y" 20 "z" 30)
+  r:get "a" => [["x" 10] ["y" 20] ["z" 30]]
+  r:get "class(a)" => "data.frame"
+  O> (r:putDataframe "a" "x" [10 20 30] "y" ["f" "g" "h"] "z" [true false true])
+  r:get "a" => [["x" [10 20 30]] ["y" ["f" "g" "h"]] ["z" [true false true]]]
+  r:get "class(a)" => "data.frame"
+
+PutAgent
+  extensions [ r ]
+  O> r:setup
+  O> create-turtles 1 [ set color red set heading 90 set shape "arrow" ]
+  O> r:putAgent "a" (one-of turtles) "color"
+  r:get "a" => [["color" 15]]
+  r:get "class(a)" => "list"
+  O> (r:putAgent "a" (one-of turtles) "color" "heading" "shape")
+  r:get "a" => [["color" 15] ["heading" 90] ["shape" "arrow"]]
+  r:get "class(a)" => "list"
+  O> create-turtles 1 [ set color blue set heading 180 set shape "wolf" ]
+  O> r:putAgent "a" turtles "color"
+  r:get "a" => [["color" [15 105]]]
+  r:get "class(a)" => "list"
+  O> (r:putAgent "a" turtles "color" "heading" "shape")
+  r:get "a" => [["color" [15 105]] ["heading" [90 180]] ["shape" ["arrow" "wolf"]]]
+  r:get "class(a)" => "list"
+
+PutAgentDataFrame
+  extensions [ r ]
+  O> r:setup
+  O> create-turtles 1 [ set color red set heading 90 set shape "arrow" ]
+  O> r:putAgentDf "a" (one-of turtles) "color"
+  r:get "a" => [["color" 15]]
+  r:get "class(a)" => "data.frame"
+  O> (r:putAgentDf "a" (one-of turtles) "color" "heading" "shape")
+  r:get "a" => [["color" 15] ["heading" 90] ["shape" "arrow"]]
+  r:get "class(a)" => "data.frame"
+  O> create-turtles 1 [ set color blue set heading 180 set shape "wolf" ]
+  O> r:putAgentDf "a" turtles "color"
+  r:get "a" => [["color" [15 105]]]
+  r:get "class(a)" => "data.frame"
+  O> (r:putAgentDf "a" turtles "color" "heading" "shape")
+  r:get "a" => [["color" [15 105]] ["heading" [90 180]] ["shape" ["arrow" "wolf"]]]
+  r:get "class(a)" => "data.frame"
+
+SetPlotDevice
+  extensions [ r ]
+  O> r:setup
+  O> r:setPlotDevice

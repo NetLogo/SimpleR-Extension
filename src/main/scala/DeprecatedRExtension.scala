@@ -18,20 +18,27 @@ class DeprecatedRExtension extends SimpleRExtension {
     manager.addPrimitive("put", DeprecatedCommand("put", Set, pleaseUse("set")))
     manager.addPrimitive("get", DeprecatedReporter("get", RunResult, pleaseUse("runresult")))
 
-    // manager.addPrimitive("putNamedList", new PutNamedList())
-    // manager.addPrimitive("putList", new PutList())
-    // manager.addPrimitive("putDataframe", new PutDataframe())
-    // manager.addPrimitive("putAgent", new PutAgent())
-    // manager.addPrimitive("putAgentDf", new PutAgentDataFrame())
-    // manager.addPrimitive("eval", new Eval())
-    // manager.addPrimitive("__evalDirect", new EvalDirect())
-    // manager.addPrimitive("gc", new GC())
-    // manager.addPrimitive("clear", new ClearWorkspace())
-    // manager.addPrimitive("clearLocal", new ClearLocalWorkspace())
+    manager.addPrimitive("eval", DeprecatedCommand("eval", Run, pleaseUse("run")))
+    manager.addPrimitive("__evalDirect", DeprecatedCommand("__evalDirect", Run, pleaseUse("run")))
+
+    manager.addPrimitive("putList", DeprecatedCommand("putList", SetList, pleaseUse("set-list")))
+    manager.addPrimitive("putNamedList", DeprecatedCommand("putNamedList", SetNamedList, pleaseUse("set-named-list")))
+    manager.addPrimitive("putDataframe", DeprecatedCommand("putDataFrame", SetDataFrame, pleaseUse("set-data-frame")))
+    manager.addPrimitive("putAgent", DeprecatedCommand("putAgent", SetAgent, pleaseUse("set-agent")))
+    manager.addPrimitive("putAgentDf", DeprecatedCommand("putAgentDf", SetAgentDataFrame, pleaseUse("set-agent-data-frame")))
+
+    manager.addPrimitive("clear", DeprecatedCommand("clear", SetupR, pleaseUse("setup")))
+    manager.addPrimitive("clearLocal", DeprecatedCommand("clearLocal", SetupR, pleaseUse("setup")))
+
+    manager.addPrimitive("setPlotDevice", DeprecatedCommand("setPlotDevice", SetPlotDevice, pleaseUse("set-plot-device")))
+
+    // should be re-implemented
     // manager.addPrimitive("interactiveShell", new interactiveShell())
-    // manager.addPrimitive("setPlotDevice", new SetPlotDevice())
-    // manager.addPrimitive("stop", new Stop())
     // manager.addPrimitive("r-home", new DebugPrim(new RPath()))
+
+    // can't or won't be re-implemented
+    // manager.addPrimitive("gc", new GC())
+    // manager.addPrimitive("stop", new Stop())
     // manager.addPrimitive("jri-path", new DebugPrim(new JRIPath()))
   }
 

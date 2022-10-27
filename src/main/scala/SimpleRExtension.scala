@@ -26,6 +26,8 @@ object SimpleRExtension {
   private var _extensionClass: Class[_] = classOf[SimpleRExtension]
   def extensionClass: Class[_] = _extensionClass
 
+  // The vars above and this reset business is just for the deprecated R extensions functionality.  Once that old
+  // extension stand-in is removed, this can also be removed.  -Jeremy B Octover 2022
   def resetProps(codeName: String, longName: String, extensionClass: Class[_]) = {
     _codeName       = codeName
     _longName       = longName

@@ -64,21 +64,31 @@ object DeprecatedRExtension {
 }
 
 case class DeprecatedCommand(primName: String, prim: Command, deprecationMessage: String) extends Command {
+  var hasDisplayed = false
+
   override def getSyntax: Syntax = prim.getSyntax
 
   override def perform(args: Array[Argument], context: Context): Unit = {
-    val message = DeprecatedRExtension.createMessage(primName, deprecationMessage)
-    DeprecatedRExtension.warn(message)
+    if (!hasDisplayed) {
+      hasDisplayed = true
+      val message = DeprecatedRExtension.createMessage(primName, deprecationMessage)
+      DeprecatedRExtension.warn(message)
+    }
     prim.perform(args, context)
   }
 }
 
 case class DeprecatedReporter(primName: String, prim: Reporter, val deprecationMessage: String) extends Reporter {
+  var hasDisplayed = false
+
   override def getSyntax: Syntax = prim.getSyntax
 
   override def report(args: Array[Argument], context: Context): AnyRef = {
-    val message = DeprecatedRExtension.createMessage(primName, deprecationMessage)
-    DeprecatedRExtension.warn(message)
+    if (!hasDisplayed) {
+      hasDisplayed = true
+      val message = DeprecatedRExtension.createMessage(primName, deprecationMessage)
+      DeprecatedRExtension.warn(message)
+    }
     prim.report(args, context)
   }
 }

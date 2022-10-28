@@ -242,7 +242,7 @@ object SetDataFrame extends Command {
     if (nameValueArgs.length % 2 != 0) {
       throw new ExtensionException("Each value must have a name.")
     }
-    val (logoNames, logoValues) = (0 until nameValueArgs.length by 2).map( (i) => {
+    val (logoNames, logoColumns) = (0 until nameValueArgs.length by 2).map( (i) => {
       val name  = nameValueArgs(i).getString
       val value = nameValueArgs(i + 1).get match {
         case l: LogoList => l
@@ -250,10 +250,9 @@ object SetDataFrame extends Command {
       }
       (name, value)
     }).unzip
-    val logoRows = logoValues.transpose.map( (logoRow) => LogoList.fromIterator(logoRow.iterator) )
-    val names    = SimpleRExtension.rProcess.convert.toJson(LogoList.fromIterator(logoNames.iterator))
-    val rows     = SimpleRExtension.rProcess.convert.toJson(LogoList.fromIterator(logoRows.iterator))
-    val body     = ("varName" -> varName) ~ ("rows" -> rows) ~ ("names" -> names)
+    val names   = SimpleRExtension.rProcess.convert.toJson(LogoList.fromIterator(logoNames.iterator))
+    val columns = SimpleRExtension.rProcess.convert.toJson(LogoList.fromIterator(logoColumns.iterator))
+    val body    = ("varName" -> varName) ~ ("columns" -> columns) ~ ("names" -> names)
     SimpleRExtension.rProcess.genericJson(SimpleRExtension.MessageIds.SET_DATA_FRAME, body)
   }
 }
@@ -308,28 +307,28 @@ object SetAgentDataFrame extends Command {
   )
 
   override def perform(args: Array[Argument], context: Context): Unit = {
-    val varName  = args(0).getString
-    val agentArg = args(1).get
-    val names    = args.toSeq.drop(2).map(_.getString)
-    val agents   = agentArg match {
+    val varName   = args(0).getString
+    val agentArg  = args(1).get
+    val names     = args.toSeq.drop(2).map(_.getString)
+    val agentRows = agentArg match {
       case agent: Agent  =>
         val variableIndices = names.map( (varName) => agent.world.indexOfVariable(agent, varName.toUpperCase) )
-        val values          = LogoList.fromIterator(SetAgent.agentToValues(agent, variableIndices).iterator)
-        LogoList(values)
+        Seq(SetAgent.agentToValues(agent, variableIndices))
 
-      case set: AgentSet =>
+      case agentset: AgentSet =>
         import scala.collection.JavaConverters._
-        val sampleAgent     = set.agents.iterator.next.asInstanceOf[Agent]
+        val sampleAgent     = agentset.agents.iterator.next.asInstanceOf[Agent]
         val variableIndices = names.map( (varName) => sampleAgent.world.indexOfVariable(sampleAgent, varName.toUpperCase) )
-        val agentsAsRows    = set.agents.asScala.map( (agent) => LogoList.fromIterator(SetAgent.agentToValues(agent.asInstanceOf[Agent], variableIndices).iterator) )
-        LogoList.fromIterator(agentsAsRows.iterator)
+        agentset.agents.asScala.map( (agent) => SetAgent.agentToValues(agent.asInstanceOf[Agent], variableIndices) )
     }
-    val values = SimpleRExtension.rProcess.convert.toJson(agents)
-    val body   = ("varName" -> varName) ~ ("rows" -> values) ~ ("names" -> names)
+    val logoColumns = LogoList.fromIterator(agentRows.transpose.map( (column) => LogoList.fromIterator(column.iterator) ).iterator)
+    val columns     = SimpleRExtension.rProcess.convert.toJson(logoColumns)
+    val body        = ("varName" -> varName) ~ ("columns" -> columns) ~ ("names" -> names)
     SimpleRExtension.rProcess.genericJson(SimpleRExtension.MessageIds.SET_DATA_FRAME, body)
   }
 }
 
+// Not to be confused with `EnableDeusExMachina`, `AddNewMacGuffin`, or `ShowRedHerring`
 object SetPlotDevice extends Command {
   override def getSyntax: Syntax = Syntax.commandSyntax(right = List())
 

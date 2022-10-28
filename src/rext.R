@@ -95,20 +95,13 @@ handle_set_named_list <- function(sock, body) {
 handle_set_data_frame <- function(sock, body) {
   var_name <- body$varName
   names    <- body$names
-  rows     <- body$rows
-  # For reasons exceeding my R knowledge, if you use the named lists method with a single row, then the `toJSON()` on
-  # the result gives you something like `{ x: ["x", 20] }`, double-listing the variable/column name.  With more than 1 row,
-  # it's fine: `{ x: [20, 30, 40] }`.  If you try to use the naive list of lists method with more than 1 row, on the other
-  # hand, `as.data.frame()` tries to give each element of each row a separate column (???)  -Jeremy B October 2022
-  if (length(rows) < 2) {
-    df <- as.data.frame(rows)
-    colnames(df) = lapply(names, c)
-  } else {
-    names_vec    <- unlist(names)
-    named_values <- lapply(rows, function(r) { setNames(r, names_vec) })
-    df <- as.data.frame(do.call(rbind, named_values))
-  }
-  assign(var_name, df, envir = env)
+  columns  <- body$columns
+
+  columns_vec <- lapply(columns, unlist)
+  data_frame  <- do.call(data.frame, columns_vec)
+  colnames(data_frame) <- unlist(names)
+
+  assign(var_name, data_frame, envir = env)
   out_msg <- list(
     type = succ_msg
   , body = ""

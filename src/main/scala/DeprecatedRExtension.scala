@@ -1,7 +1,7 @@
 package org.nlogo.extensions.simpler
 
 
-import org.nlogo.api.{ Argument, Command, Context, ExtensionManager, OutputDestinationJ, PrimitiveManager, Reporter }
+import org.nlogo.api.{ Argument, Command, Context, ExtensionManager, OutputDestinationJ, PrimitiveManager, Reporter, Workspace }
 import org.nlogo.core.{ Syntax }
 import org.nlogo.headless.HeadlessWorkspace
 import org.nlogo.workspace.{ AbstractWorkspace, ExtensionManager => WorkspaceExtensionManager }
@@ -66,6 +66,16 @@ object DeprecatedRExtension {
   def createMessage(primName: String, deprecationMessage: String): String = {
     s"$deprecationMessage\n\nThe R extension and `r:$primName` are deprecated and will be removed from a future version of NetLogo.  The Simple R extension is its replacement, and it includes all of the same functionality with a much easier setup.  This version of the R extension is actually using the Simple R extension's code, but with the old R extension primitive names.\n\nPlease see the Simple R extension documentation for more info: https://github.com/NetLogo/SimpleR-Extension/blob/main/README.md#using"
   }
+
+  // The R extension didn't require a separate `r:setup` command be run, so we just auto-run the setup ourselves if we
+  // haven't already.  -Jeremy B October 2022
+  def startR(workspace: Workspace): Unit = {
+    var hasStarted = false
+    if (!hasStarted && !SimpleRExtension.isStarted) {
+      hasStarted = true
+      SimpleRExtension.startR(workspace)
+    }
+  }
 }
 
 object DummyCommand extends Command {
@@ -88,6 +98,7 @@ case class DeprecatedCommand(primName: String, prim: Command, deprecationMessage
       hasDisplayed = true
       val message = DeprecatedRExtension.createMessage(primName, deprecationMessage)
       DeprecatedRExtension.warn(message)
+      DeprecatedRExtension.startR(context.workspace)
     }
     prim.perform(args, context)
   }
@@ -103,6 +114,7 @@ case class DeprecatedReporter(primName: String, prim: Reporter, val deprecationM
       hasDisplayed = true
       val message = DeprecatedRExtension.createMessage(primName, deprecationMessage)
       DeprecatedRExtension.warn(message)
+      DeprecatedRExtension.startR(context.workspace)
     }
     prim.report(args, context)
   }

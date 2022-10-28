@@ -199,7 +199,7 @@ object SetList extends Command {
 
   override def perform(args: Array[Argument], context: Context): Unit = {
     val name = args(0).getString
-    val list = LogoList.fromIterator(args.toSeq.drop(1).map(_.get).iterator)
+    val list = args.toSeq.drop(1).map(_.get)
     SimpleRExtension.rProcess.assign(name, list)
   }
 }
@@ -222,8 +222,8 @@ object SetNamedList extends Command {
       val value = nameValueArgs(i + 1).get
       (name, value)
     }).unzip
-    val names  = SimpleRExtension.rProcess.convert.toJson(LogoList.fromIterator(logoNames.iterator))
-    val values = SimpleRExtension.rProcess.convert.toJson(LogoList.fromIterator(logoValues.iterator))
+    val names  = SimpleRExtension.rProcess.convert.toJson(logoNames)
+    val values = SimpleRExtension.rProcess.convert.toJson(logoValues)
     val body   = ("varName" -> varName) ~ ("values" -> values) ~ ("names" -> names)
     SimpleRExtension.rProcess.genericJson(SimpleRExtension.MessageIds.SET_NAMED_LIST, body)
   }
@@ -250,8 +250,8 @@ object SetDataFrame extends Command {
       }
       (name, value)
     }).unzip
-    val names   = SimpleRExtension.rProcess.convert.toJson(LogoList.fromIterator(logoNames.iterator))
-    val columns = SimpleRExtension.rProcess.convert.toJson(LogoList.fromIterator(logoColumns.iterator))
+    val names   = SimpleRExtension.rProcess.convert.toJson(logoNames)
+    val columns = SimpleRExtension.rProcess.convert.toJson(logoColumns)
     val body    = ("varName" -> varName) ~ ("columns" -> columns) ~ ("names" -> names)
     SimpleRExtension.rProcess.genericJson(SimpleRExtension.MessageIds.SET_DATA_FRAME, body)
   }
@@ -282,16 +282,15 @@ object SetAgent extends Command {
     val agents   = agentArg match {
       case agent: Agent  =>
         val variableIndices = names.map( (varName) => agent.world.indexOfVariable(agent, varName.toUpperCase) )
-        val values          = LogoList.fromIterator(SetAgent.agentToValues(agent, variableIndices).iterator)
+        val values          = SetAgent.agentToValues(agent, variableIndices)
         values
 
-      case set: AgentSet =>
+      case agentset: AgentSet =>
         import scala.collection.JavaConverters._
-        val sampleAgent     = set.agents.iterator.next.asInstanceOf[Agent]
+        val sampleAgent     = agentset.agents.iterator.next.asInstanceOf[Agent]
         val variableIndices = names.map( (varName) => sampleAgent.world.indexOfVariable(sampleAgent, varName.toUpperCase) )
-        val agentsAsRows    = set.agents.asScala.map( (agent) => SetAgent.agentToValues(agent.asInstanceOf[Agent], variableIndices) )
-        val variablesAsRows = agentsAsRows.transpose.map( (values) => LogoList.fromIterator(values.iterator) )
-        LogoList.fromIterator(variablesAsRows.iterator)
+        val agentsAsRows    = agentset.agents.asScala.map( (agent) => SetAgent.agentToValues(agent.asInstanceOf[Agent], variableIndices) )
+        agentsAsRows.transpose
     }
     val values = SimpleRExtension.rProcess.convert.toJson(agents)
     val body   = ("varName" -> varName) ~ ("values" -> values) ~ ("names" -> names)
@@ -321,7 +320,7 @@ object SetAgentDataFrame extends Command {
         val variableIndices = names.map( (varName) => sampleAgent.world.indexOfVariable(sampleAgent, varName.toUpperCase) )
         agentset.agents.asScala.map( (agent) => SetAgent.agentToValues(agent.asInstanceOf[Agent], variableIndices) )
     }
-    val logoColumns = LogoList.fromIterator(agentRows.transpose.map( (column) => LogoList.fromIterator(column.iterator) ).iterator)
+    val logoColumns = agentRows.transpose
     val columns     = SimpleRExtension.rProcess.convert.toJson(logoColumns)
     val body        = ("varName" -> varName) ~ ("columns" -> columns) ~ ("names" -> names)
     SimpleRExtension.rProcess.genericJson(SimpleRExtension.MessageIds.SET_DATA_FRAME, body)

@@ -120,7 +120,7 @@ handle_quit <- function(sock) {
 }
 
 server <- function() {
-  port <- strtoi(commandArgs(trailingOnly=TRUE)[1])
+  port <- strtoi(commandArgs(trailingOnly = TRUE)[1])
   sock <- socketConnection(
     host = "localhost"
   , port = port
@@ -134,7 +134,7 @@ server <- function() {
     tryCatch({
       msg_line <- readLines(sock, 1)
       if (length(msg_line) != 0) {
-        msg_parsed <- fromJSON(json_str = msg_line, simplify = FALSE)
+        msg_parsed <- fromJSON(json_str = msg_line, simplify = TRUE)
         msg_type <- msg_parsed$type
 
         if (msg_type == heartbeat_request_msg) {

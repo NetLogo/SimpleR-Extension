@@ -69,21 +69,21 @@ SetList
   extensions [ sr ]
   O> sr:setup
   O> sr:set-list "a" 10
-  sr:runresult "a" => [10]
-  sr:runresult "class(a)" => "list"
+  sr:runresult "a" => 10
+  sr:runresult "class(a)" => "numeric"
   O> (sr:set-list "a" 10 20 30)
   sr:runresult "a" => [10 20 30]
-  sr:runresult "class(a)" => "list"
+  sr:runresult "class(a)" => "numeric"
 
 SetNamedList
   extensions [ sr ]
   O> sr:setup
   O> sr:set-named-list "a" "x" 10
   sr:runresult "a" => [["x" 10]]
-  sr:runresult "class(a)" => "list"
+  sr:runresult "class(a)" => "numeric"
   O> (sr:set-named-list "a" "x" 10 "y" 20 "z" 30)
   sr:runresult "a" => [["x" 10] ["y" 20] ["z" 30]]
-  sr:runresult "class(a)" => "list"
+  sr:runresult "class(a)" => "numeric"
 
 SetDataFrame1
   extensions [ sr ]
@@ -112,7 +112,7 @@ SetAgent1
   O> create-turtles 1 [ set color red set heading 90 set shape "arrow" ]
   O> sr:set-agent "a" (one-of turtles) "color"
   sr:runresult "a" => [["color" 15]]
-  sr:runresult "class(a)" => "list"
+  sr:runresult "class(a)" => "numeric"
 
 SetAgent2
   extensions [ sr ]

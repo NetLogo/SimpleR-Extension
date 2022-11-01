@@ -12,20 +12,20 @@ Eval
 PutList
   extensions [ r ]
   O> r:putList "a" 10
-  r:get "a" => [10]
-  r:get "class(a)" => "list"
+  r:get "a" => 10
+  r:get "class(a)" => "numeric"
   O> (r:putList "a" 10 20 30)
   r:get "a" => [10 20 30]
-  r:get "class(a)" => "list"
+  r:get "class(a)" => "numeric"
 
 PutNamedList
   extensions [ r ]
   O> r:putNamedList "a" "x" 10
   r:get "a" => [["x" 10]]
-  r:get "class(a)" => "list"
+  r:get "class(a)" => "numeric"
   O> (r:putNamedList "a" "x" 10 "y" 20 "z" 30)
   r:get "a" => [["x" 10] ["y" 20] ["z" 30]]
-  r:get "class(a)" => "list"
+  r:get "class(a)" => "numeric"
 
 PutDataFrame
   extensions [ r ]
@@ -44,7 +44,7 @@ PutAgent
   O> create-turtles 1 [ set color red set heading 90 set shape "arrow" ]
   O> r:putAgent "a" (one-of turtles) "color"
   r:get "a" => [["color" 15]]
-  r:get "class(a)" => "list"
+  r:get "class(a)" => "numeric"
   O> (r:putAgent "a" (one-of turtles) "color" "heading" "shape")
   r:get "a" => [["color" 15] ["heading" 90] ["shape" "arrow"]]
   r:get "class(a)" => "list"

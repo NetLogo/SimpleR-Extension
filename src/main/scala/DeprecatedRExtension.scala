@@ -55,6 +55,11 @@ class DeprecatedRExtension extends SimpleRExtension {
         (message) => aw.outputObject(message, null, true, false, OutputDestinationJ.NORMAL)
     }
   }
+
+  override def unload(em: ExtensionManager): Unit = {
+    super.unload(em)
+    DeprecatedRExtension.hasStarted = false
+  }
 }
 
 object DeprecatedRExtension {
@@ -67,10 +72,11 @@ object DeprecatedRExtension {
     s"$deprecationMessage\n\nThe R extension and `r:$primName` are deprecated and will be removed from a future version of NetLogo.  The Simple R extension is its replacement, and it includes all of the same functionality with a much easier setup.  This version of the R extension is actually using the Simple R extension's code, but with the old R extension primitive names.\n\nPlease see the Simple R extension documentation for more info: https://github.com/NetLogo/SimpleR-Extension/blob/main/README.md#using"
   }
 
+  protected var hasStarted = false
+
   // The R extension didn't require a separate `r:setup` command be run, so we just auto-run the setup ourselves if we
   // haven't already.  -Jeremy B October 2022
   def startR(workspace: Workspace): Unit = {
-    var hasStarted = false
     if (!hasStarted && !SimpleRExtension.isStarted) {
       hasStarted = true
       SimpleRExtension.startR(workspace)

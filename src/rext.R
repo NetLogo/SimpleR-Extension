@@ -5,35 +5,37 @@ rExtensionLibraryPath <- file.path(rExtensionUserDirPath, paste0("r-", R.version
 
 suppressPackageStartupMessages(require("rjson"))
 
+# A note on R execution environments: Before R-Extension compatibility was introduced, we used a seperate environment
+# for running `eval(..., envir = env)` and `assign(..., envir = env)`.  The issue is that some R functions the user
+# could run wouldn't know about this environment, such as `source()`, so R-Extension models using it wouldn't work.  We
+# could have asked those users to update their models, but I'd like to avoid having them run into weird errors, and I
+# think living with our `sr` extension data and functions in the global environment should be fine.  If some other
+# conflict comes up we can look into an even fancier way of handling this.  -Jeremy B November 2022
+
 # In
-quit_msg <- -1
-stmt_msg <- 0
-expr_msg <- 1
-assn_msg <- 2
-expr_stringified_msg <- 3
-heartbeat_request_msg <- 4
+sr.quit_msg <- -1
+sr.stmt_msg <- 0
+sr.expr_msg <- 1
+sr.assn_msg <- 2
+sr.expr_stringified_msg <- 3
+sr.heartbeat_request_msg <- 4
 
 # In - Custom
-
-set_named_list_msg <- 900
-set_data_frame_msg <- 901
+sr.set_named_list_msg <- 900
+sr.set_data_frame_msg <- 901
 
 # Out
-succ_msg <- 0
-err_msg <- 1
-heartbeat_response_msg <- 4
+sr.succ_msg <- 0
+sr.err_msg <- 1
+sr.heartbeat_response_msg <- 4
 
-# The environment we are working in should have the same parent as the current environment.
-# That way we have all of the default imports but none of the variables we define in *this* file's environment.
-env <- new.env(parent = parent.env(environment()))
-
-eval_wrapper <- function(s) {
-  eval(parse(text = s), envir = env)
+sr.eval <- function(s) {
+  eval(parse(text = s), envir = .GlobalEnv)
 }
 
-send_error <- function(sock, message, longMessage) {
+sr.send_error <- function(sock, message, longMessage) {
   err_msg <- list(
-    type = err_msg
+    type = sr.err_msg
   , body = list(
       message = message
     , longMessage = paste(longMessage, "\n")
@@ -42,57 +44,57 @@ send_error <- function(sock, message, longMessage) {
   writeLines(toJSON(err_msg), sock)
 }
 
-handle_statememt <- function(sock, body) {
-  eval_wrapper(body)
+sr.statememt <- function(sock, body) {
+  sr.eval(body)
   out_msg <- list(
-    type = succ_msg
+    type = sr.succ_msg
   , body = ""
   )
   writeLines(toJSON(out_msg), sock)
 }
 
-handle_expression <- function(sock, body) {
-  res <- eval_wrapper(body)
+sr.expression <- function(sock, body) {
+  res <- sr.eval(body)
   out_msg <- list(
-    type = succ_msg
+    type = sr.succ_msg
   , body = res
   )
   writeLines(toJSON(out_msg), sock)
 }
 
-handle_expression_stringified <- function(sock, body){
-  res <- toString(eval_wrapper(body))
+sr.expression_stringified <- function(sock, body) {
+  res <- toString(sr.eval(body))
   out_msg <- list(
-    type = succ_msg
+    type = sr.succ_msg
   , body = res
   )
   writeLines(toJSON(out_msg), sock)
 }
 
-handle_assignment <- function(sock, body) {
-  varName <- body$varName
+sr.assignment <- function(sock, body) {
+  var_name <- body$varName
   value   <- body$value
-  assign(varName, value, envir = env)
+  assign(var_name, value, envir = .GlobalEnv)
   out_msg <- list(
-    type = succ_msg
+    type = sr.succ_msg
   , body = ""
   )
   writeLines(toJSON(out_msg), sock)
 }
 
-handle_set_named_list <- function(sock, body) {
+sr.set_named_list <- function(sock, body) {
   var_name   <- body$varName
   names_vec  <- unlist(body$names)
   named_list <- setNames(body$values, names_vec)
-  assign(var_name, named_list, envir = env)
+  assign(var_name, named_list, envir = .GlobalEnv)
   out_msg <- list(
-    type = succ_msg
+    type = sr.succ_msg
   , body = ""
   )
   writeLines(toJSON(out_msg), sock)
 }
 
-handle_set_data_frame <- function(sock, body) {
+sr.set_data_frame <- function(sock, body) {
   var_name <- body$varName
   names    <- body$names
   columns  <- body$columns
@@ -101,26 +103,29 @@ handle_set_data_frame <- function(sock, body) {
   data_frame  <- do.call(data.frame, columns_vec)
   colnames(data_frame) <- unlist(names)
 
-  assign(var_name, data_frame, envir = env)
+  assign(var_name, data_frame, envir = .GlobalEnv)
   out_msg <- list(
-    type = succ_msg
+    type = sr.succ_msg
   , body = ""
   )
   writeLines(toJSON(out_msg), sock)
 }
 
-handle_heartbeat <- function(sock) {
-  out_msg <- list(type = heartbeat_response_msg)
+sr.heartbeat <- function(sock) {
+  out_msg <- list(type = sr.heartbeat_response_msg)
   writeLines(toJSON(out_msg), sock)
 }
 
-handle_quit <- function(sock) {
-  out_msg <- list(type = succ_msg)
+sr.quit <- function(sock) {
+  out_msg <- list(type = sr.succ_msg)
   writeLines(toJSON(out_msg), sock)
 }
 
-server <- function() {
-  port <- strtoi(commandArgs(trailingOnly = TRUE)[1])
+sr.start_server <- function() {
+  # We should always provide the port for this script to use, this is just so we can load this file with `source()` in
+  # an R interpreter for testing purposes.  -Jeremy B November 2022
+  args <- commandArgs(trailingOnly = TRUE)
+  port <- ifelse(length(args) == 0, 9000, strtoi(args[1]))
   sock <- socketConnection(
     host = "localhost"
   , port = port
@@ -130,46 +135,46 @@ server <- function() {
   )
 
   active <- TRUE
-  while(active) {
+  while (active) {
     tryCatch({
       msg_line <- readLines(sock, 1)
       if (length(msg_line) != 0) {
         msg_parsed <- fromJSON(json_str = msg_line, simplify = TRUE)
         msg_type <- msg_parsed$type
 
-        if (msg_type == heartbeat_request_msg) {
-          handle_heartbeat(sock)
+        if (msg_type == sr.heartbeat_request_msg) {
+          sr.heartbeat(sock)
 
-        } else if (msg_type == stmt_msg) {
-          handle_statememt(sock, msg_parsed$body)
+        } else if (msg_type == sr.stmt_msg) {
+          sr.statememt(sock, msg_parsed$body)
 
-        } else if (msg_type == expr_msg) {
-          handle_expression(sock, msg_parsed$body)
+        } else if (msg_type == sr.expr_msg) {
+          sr.expression(sock, msg_parsed$body)
 
-        } else if (msg_type == assn_msg) {
-          handle_assignment(sock, msg_parsed$body)
+        } else if (msg_type == sr.assn_msg) {
+          sr.assignment(sock, msg_parsed$body)
 
-        } else if (msg_type == expr_stringified_msg) {
-          handle_expression_stringified(sock, msg_parsed$body)
+        } else if (msg_type == sr.expr_stringified_msg) {
+          sr.expression_stringified(sock, msg_parsed$body)
 
-        } else if (msg_type == quit_msg) {
+        } else if (msg_type == sr.quit_msg) {
           active <- FALSE
-          handle_quit(sock)
+          sr.quit(sock)
 
-        } else if (msg_type == set_named_list_msg) {
-          handle_set_named_list(sock, msg_parsed$body)
+        } else if (msg_type == sr.set_named_list_msg) {
+          sr.set_named_list(sock, msg_parsed$body)
 
-        } else if (msg_type == set_data_frame_msg) {
-          handle_set_data_frame(sock, msg_parsed$body)
+        } else if (msg_type == sr.set_data_frame_msg) {
+          sr.set_data_frame(sock, msg_parsed$body)
 
         } else {
-          send_error("Bad message type: ", toString(msg_type), "")
+          sr.send_error("Bad message type: ", toString(msg_type), "")
         }
       }
     },
 
     error = function(e) {
-      send_error(sock, e$message, e$message)
+      sr.send_error(sock, e$message, e$message)
     },
 
     warning = function(w) {
@@ -181,4 +186,4 @@ server <- function() {
   close(sock)
 }
 
-server()
+sr.start_server()

@@ -2,6 +2,8 @@ import org.nlogo.build.{ ExtensionDocumentationPlugin, NetLogoExtension }
 
 name := "Simple R Extension"
 
+enablePlugins(ExtensionDocumentationPlugin)
+
 lazy val rScriptFiles   = settingKey[Seq[File]]("list of R scripts to include in package and testing")
 lazy val commonSettings = Seq(
   version    := "1.0.2"
@@ -53,7 +55,6 @@ lazy val simpleR = (project in file("root-simple-r"))
   , netLogoExtName        := "sr"
   )
   .enablePlugins(NetLogoExtension)
-  .enablePlugins(ExtensionDocumentationPlugin)
 
 lazy val deprecatedR = (project in file("root-deprecated-r"))
   .settings(commonSettings: _*)
@@ -64,4 +65,3 @@ lazy val deprecatedR = (project in file("root-deprecated-r"))
   , netLogoLongDescription := "Deprecated!  Please use Simple R extensions instead."
   )
   .enablePlugins(NetLogoExtension)
-  .enablePlugins(ExtensionDocumentationPlugin)

@@ -5,15 +5,12 @@ This NetLogo extension allows you to run R code from within NetLogo.
 
 ## Building
 
-Make sure your sbt is at least at version 0.13.6
-
-Run `sbt package`.
-
-If compilation succeeds, `sr.jar` will be created, and the required dependencies will be copied to the root of the repository.  Copy all the `jar` files and `rext.r` from the repository root to a `sr` directory inside your NetLogo `extensions` directory.
+Run `sbt simpleR/package`.  If compilation succeeds, `sr.jar` will be created in the `root-simple-r/` folder, and the required dependencies will be copied there as well.  For testing, copy all the `jar` files and `rext.r` from the repository root to a `sr` directory inside your NetLogo `extensions` directory.  To package for release to the extensions library, run `simpleR/packageZip`.
 
 ## Using
 
-To run R code you must install R version 4.  You also must specify the location of your `R` executable using the SimpleR Extension > Configure menu in NetLogo after loading the `sr` extension, or have the `R` executable on your `PATH`.  You can download R from [their site](https://www.r-project.org/).
+To run R code you must install R and have the `R` executable on your `PATH`.
+You can download R from [their site](https://www.r-project.org/).
 
 To use this extension, you must first include it at the top of your NetLogo model code in an `extensions` declaration.
 
@@ -80,7 +77,8 @@ Running this command again will shutdown the current R environment and start a n
 ### `sr:run`
 
 ```NetLogo
-sr:run R-statement
+sr:run *R-statement*
+(sr:run *R-statement* *anything...*)
 ```
 
 
@@ -111,7 +109,7 @@ If you have long-running R code, NetLogo may freeze for a bit while it runs.
 ### `sr:runresult`
 
 ```NetLogo
-sr:runresult R-expression
+sr:runresult *R-expression*
 ```
 
 
@@ -149,7 +147,7 @@ Other objects will be converted to a string representation if possible and and m
 ### `sr:set`
 
 ```NetLogo
-sr:set variable-name value
+sr:set *variable-name* *value*
 ```
 
 
@@ -157,21 +155,21 @@ Sets a variable in the R session with the given name to the given NetLogo value.
 NetLogo objects will be converted to R objects as expected.
 
 
-Note that lists in NetLogo are converted into lists in R. You will often want to use the R function `unlist` to convert these lists into R vectors.
+Note that lists in NetLogo are converted into lists in R if the elements are of different types.  If all the elements of a NetLogo list are of the identical number, boolean, or string type then the data will be automatically converted into a vector in R.
 
 ```NetLogo
 sr:set "x" 42
 sr:run "print(x)" ;; prints `[1] 42` to the command center
 sr:set "y" [1 2 3]
-sr:run "print(typeof(y))" ;; prints `[1] "list"` to the command center
-sr:run "print(typeof(unlist(y)))" ;; prints `[1] "double"` to the command center
-sr:run "print(unlist(y))" ;; prints `[1] 1, 2, 3` to the command center
+sr:run "print(typeof(y))" ;; prints `[1] "double"` to the command center
+sr:run "print(typeof(list(y)))" ;; prints `[1] "list"` to the command center
+sr:run "print(y)" ;; prints `[1] 1 2 3` to the command center
 show sr:runresult "y" ;; reports [1 2 3]
 ```
 
 Agents are converted into lists with named elements for each agent variable.
 
-Agentsets are converted into a list of the above lists. To convert this list of lists into a dataframe, use the following:
+Agentsets are converted into a list of the above lists. If you want to convert agents to a data frame, see `sr:set-agent-data-frame`.  If you want to use `sr:set` and do the conversion manually, try the following:
 
 ```R
 my_data_frame <- as.data.frame(do.call(rbind, <agentset-list-of-lists>))
@@ -213,16 +211,147 @@ Agents with variables containing references to agentsets will have those variabl
 
 
 
+### `sr:set-agent`
+
+```NetLogo
+sr:set-agent *r-variable-name* *agent-or-agentset* *agent-variable-name*
+(sr:set-agent *r-variable-name* *agent-or-agentset* *agent-variable-name1* *agent-variable-name2...*)
+```
+
+Creates a new named list in R with the given variable name.  If you want multiple agent variables make sure to surround the command in parenthesis.
+
+```
+clear-all
+sr:setup
+create-turtles 2
+ask turtle 0 [ set color red set xcor 5]
+ask turtle 1 [ set color blue set xcor -5]
+(sr:set-agent "t0" turtle 0 "who" "color" "xcor" "hidden?")
+sr:run "print(typeof(t0))"
+;; [1] "list"
+sr:run "print(t0)"
+;; $who
+;; [1] 0
+;;
+;; $color
+;; [1] 15
+;;
+;; $xcor
+;; [1] 5
+;;
+;; $`hidden?`
+;; [1] FALSE
+```
+
+
+
+### `sr:set-agent-data-frame`
+
+```NetLogo
+sr:set-agent-data-frame *r-variable-name* *agents* *agent-variable-name*
+(sr:set-agent-data-frame *r-variable-name* *agents* *agent-variable-name1* *agent-variable-name2...*)
+```
+
+Creates a new data frame in R with the given variable name.  The columns will have the names of the NetLogo agent variables used and each row will be one agent's data.  If you want multiple agent variables make sure to surround the command in parenthesis.
+
+```
+clear-all
+sr:setup
+create-turtles 2
+ask turtle 0 [ set color red set xcor 5]
+ask turtle 1 [ set color blue set xcor -5]
+(sr:set-agent-data-frame "turtles_data_frame" turtles "who" "color" "xcor" "hidden?")
+sr:run "print(typeof(turtles_data_frame))"
+;; [1] "list"
+sr:run "print(is.data.frame(turtles_data_frame))"
+;; [1] TRUE
+sr:run "print(turtles_data_frame)"
+;;   who color xcor hidden?
+;; 1   0    15    5   FALSE
+;; 2   1   105   -5   FALSE
+```
+
+
+
+### `sr:set-data-frame`
+
+```NetLogo
+sr:set-data-frame *r-variable-name* *column-name* *list-or-anything*
+(sr:set-data-frame *variable-name* *column-name1* *list-or-anything-1* *column-name2* *list-or-anything-2...*)
+```
+
+Creates a new data frame in R with the given variable name.  The columns will have the names given.  If the value for a column is a list, those will be the values for that column.  If the value is a non-list, it will be used as the single item in that column.  You can add additional column names and values by surrounding the command in parenthesis.
+
+```
+clear-all
+sr:setup
+let l1 [10 20 30 40]
+let l2 [false true false false]
+let l3 ["orange" "green" "blue" "purple"]
+(sr:set-data-frame "df1" "score" l1 "enabled" l2 "color" l3)
+sr:run "print(typeof(df1))"
+;; [1] "list"
+sr:run "print(is.data.frame(df1))"
+;; [1] TRUE
+sr:run "print(df1)"
+;;   score enabled  color
+;; 1    10   FALSE orange
+;; 2    20    TRUE  green
+;; 3    30   FALSE   blue
+;; 4    40   FALSE purple
+```
+
+
+
+### `sr:set-list`
+
+```NetLogo
+sr:set-list *r-variable-name* *anything*
+(sr:set-list *r-variable-name* *anything1* *anything2...*)
+```
+
+Creates a new list in R with the given variable name.  You can add additional values by surrounding the command in parenthesis.
+
+
+### `sr:set-named-list`
+
+```NetLogo
+sr:set-named-list *r-variable-name* *column-name* *list-or-anything*
+(sr:set-named-list *r-variable-name* *column-name1* *list-or-anything-1* *column-name2* *list-or-anything-2...*)
+```
+
+Creates a new named list in R with the given variable name.  The columns will have the names given.  If the value for a column is a list, those will be the values for that column.  If the value is a non-list, it will be used as the single item in that column.  You can add additional column names and values by surrounding the command in parenthesis.
+
+
+### `sr:set-plot-device`
+
+```NetLogo
+sr:set-plot-device
+```
+
+Activates the visual plot device for R, popping open a window if one is not already open.
+
+
 ## Transitioning from the old R extension
 
-Most all of the functionality from the old R extension remains in SimpleR, though much of the specifics of how data is passed between NetLogo and R has been changed.
+As of version 2.0 of the Simple R extension, most primitives from the old R extension have a direct equivalent you can switch over to use, with a different name but identical syntax.  One change in functionality is that when a named list with a single row and column is returned, in the R extension you'd get simply the value, in the Simple R extension you will get a list with the column name and the value as elements.  If there is more than 1 element, you will get a list with the column name and a list of the values.
 
-For example, `sr:runresult` can be used instead of the old `r:get`, but the two handle dataframes differently.
-`sr:set` can replace `r:put`, but note that `sr:set` does not automatically convert lists of similar types into vectors. Use the R function `unlist()` to do so manually.
-`sr:run` should be able to be a drop-in replacement for `r:eval`, though there is no counterpart for the experimental primitive `r:__evaldirect`.
-To clear the R environment, call `sr:setup` instead of `r:clear` or `r:clearLocal`.
-
-Displaying a plot in a window is not supported, but plotting to image devices is. See the `sr:run` documentation or the `plotting.nlogo` demo file.
-
-There are no longer the same convenience methods to easily convert NetLogo variables into helpful R data structures. Perhaps this can be an area of improvement in the future.
+| R Extension Primitive | Simple R Extension Primitive                                       |
+| --------------------- | ------------------------------------------------------------------ |
+| `r:put`               | `sr:set`                                                           |
+| `r:get`               | `sr:runresult`                                                     |
+| `r:eval`              | `sr:run`                                                           |
+| `r:__evaldirect`      | `sr:run`                                                           |
+| `r:putList`           | `sr:set-list`                                                      |
+| `r:putNamedList`      | `sr:set-named-list`                                                |
+| `r:putDataFrame`      | `sr:set-data-frame`                                                |
+| `r:putAgent`          | `sr:set-agent`                                                     |
+| `r:putAgentDf`        | `sr:set-agent-data-frame`                                          |
+| `r:setPlotDevice`     | `sr:set-plot-device`                                               |
+| `r:interactiveShell`  | `sr:show-console`                                                  |
+| `r:clear`             | No exact equivalent, but `sr:setup` will start a new R environment |
+| `r:clearLocal`        | No exact equivalent, but `sr:setup` will start a new R environment |
+| `r:gc`                | No equivalent, functionality is no longer needed                   |
+| `r:stop`              | No equivalent, functionality is no longer needed                   |
+| `r:jri-path`          | No equivalent, functionality is no longer needed                   |
 

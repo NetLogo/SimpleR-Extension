@@ -6,6 +6,7 @@ import org.json4s.JsonDSL._
 
 import org.nlogo.languagelibrary.Subprocess
 import org.nlogo.languagelibrary.config.{ Config, Menu, Platform }
+import org.nlogo.languagelibrary.prims.{ EnableDebug }
 import org.nlogo.agent.{ Agent, AgentSet }
 import org.nlogo.api.{ Argument, Command, Context, DefaultClassManager, ExtensionException, ExtensionManager, FileIO, PrimitiveManager, Reporter, Workspace }
 import org.nlogo.core.{ LogoList, Syntax }
@@ -127,6 +128,8 @@ class SimpleRExtension extends DefaultClassManager {
     manager.addPrimitive("set-plot-device", SetPlotDevice)
     manager.addPrimitive("r-home", RHome)
     manager.addPrimitive("show-console", ShowConsole)
+
+    manager.addPrimitive("__enable-debug", EnableDebug)
   }
 
   override def runOnce(em: ExtensionManager): Unit = {
@@ -276,7 +279,7 @@ object SetAgent extends Command {
       // this logic mirrors what the Language-Library does with `agentToJson()` -Jeremy B October 2022
       agent.getVariable(i) match {
         case set: AgentSet => set.printName // <plural agentset name>
-        case agent: Agent  => agent.toString // <singular agentset name> <id>
+        case agent: Agent  => agent.toString // <singular agent name> <id>
         case other: AnyRef => other
       }
     })

@@ -37,7 +37,7 @@ lazy val commonSettings = Seq(
 
 , resolvers += "netlogo-lang-extension" at "https://dl.cloudsmith.io/public/netlogo/language-library/maven"
 , libraryDependencies ++= Seq(
-    "org.nlogo.languagelibrary" %% "language-library" % "2.2.2"
+    "org.nlogo.languagelibrary" %% "language-library" % "2.3.0"
 , )
 )
 

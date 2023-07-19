@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonParser
 import org.json4s.jackson.JsonMethods.mapper
 import org.json4s.JsonDSL._
 
-import org.nlogo.languagelibrary.Subprocess
+import org.nlogo.languagelibrary.{ Logger, Subprocess }
 import org.nlogo.languagelibrary.config.{ Config, Menu, Platform }
 import org.nlogo.languagelibrary.prims.{ EnableDebug }
 import org.nlogo.agent.{ Agent, AgentSet }
@@ -91,7 +91,7 @@ object SimpleRExtension {
       SimpleRExtension.rProcess = Subprocess.start(
         workspace
       , Seq(rRuntimePath)
-      , Seq(rExtFilePath, port.toString, rExtUserDirPath)
+      , Seq(rExtFilePath, port.toString, rExtUserDirPath, Logger.current.isDebugEnabled.toString)
       , SimpleRExtension.codeName
       , SimpleRExtension.longName
       , Some(port)

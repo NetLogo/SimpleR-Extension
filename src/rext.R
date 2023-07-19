@@ -1,7 +1,11 @@
-rExtensionUserDirPath <- commandArgs(trailingOnly = TRUE)[2]
-rExtensionLibraryPath <- file.path(rExtensionUserDirPath, paste0("r-", R.version$major, ".", R.version$minor, "-library"))
+sr.args <- commandArgs(trailingOnly = TRUE)
 
-.libPaths(c(.libPaths(), rExtensionLibraryPath))
+sr.rExtensionUserDirPath <- sr.args[2]
+sr.rExtensionLibraryPath <- file.path(sr.rExtensionUserDirPath, paste0("r-", R.version$major, ".", R.version$minor, "-library"))
+
+sr.debugEnabled = sr.args[3] == "true"
+
+.libPaths(c(.libPaths(), sr.rExtensionLibraryPath))
 
 suppressPackageStartupMessages(require("rjson"))
 
@@ -30,6 +34,7 @@ sr.err_msg <- 1
 sr.heartbeat_response_msg <- 4
 
 sr.eval <- function(s) {
+  if (sr.debugEnabled) { print(paste("sr.eval() ", s)) }
   eval(parse(text = s), envir = .GlobalEnv)
 }
 
@@ -45,6 +50,7 @@ sr.send_error <- function(sock, message, longMessage) {
 }
 
 sr.statememt <- function(sock, body) {
+  if (sr.debugEnabled) { print(paste("sr.statememt() ", body)) }
   sr.eval(body)
   out_msg <- list(
     type = sr.succ_msg
@@ -54,6 +60,7 @@ sr.statememt <- function(sock, body) {
 }
 
 sr.expression <- function(sock, body) {
+  if (sr.debugEnabled) { print(paste("sr.expression() ", body)) }
   res <- sr.eval(body)
   out_msg <- list(
     type = sr.succ_msg
@@ -63,6 +70,7 @@ sr.expression <- function(sock, body) {
 }
 
 sr.expression_stringified <- function(sock, body) {
+  if (sr.debugEnabled) { print(paste("sr.expression_stringified() ", body)) }
   res <- toString(sr.eval(body))
   out_msg <- list(
     type = sr.succ_msg
@@ -72,8 +80,9 @@ sr.expression_stringified <- function(sock, body) {
 }
 
 sr.assignment <- function(sock, body) {
+  if (sr.debugEnabled) { print(paste("sr.assignment() ", body)) }
   var_name <- body$varName
-  value   <- body$value
+  value    <- body$value
   assign(var_name, value, envir = .GlobalEnv)
   out_msg <- list(
     type = sr.succ_msg
@@ -83,6 +92,7 @@ sr.assignment <- function(sock, body) {
 }
 
 sr.set_named_list <- function(sock, body) {
+  if (sr.debugEnabled) { print(paste("sr.set_named_list() ", body)) }
   var_name   <- body$varName
   names_vec  <- unlist(body$names)
   named_list <- setNames(body$values, names_vec)
@@ -95,6 +105,7 @@ sr.set_named_list <- function(sock, body) {
 }
 
 sr.set_data_frame <- function(sock, body) {
+  if (sr.debugEnabled) { print(paste("sr.set_data_frame() ", body)) }
   var_name <- body$varName
   names    <- body$names
   columns  <- body$columns
@@ -112,20 +123,25 @@ sr.set_data_frame <- function(sock, body) {
 }
 
 sr.heartbeat <- function(sock) {
+  if (sr.debugEnabled) { print("sr.heartbeat()") }
   out_msg <- list(type = sr.heartbeat_response_msg)
   writeLines(toJSON(out_msg), sock)
 }
 
 sr.quit <- function(sock) {
+  if (sr.debugEnabled) { print("sr.quit()") }
   out_msg <- list(type = sr.succ_msg)
   writeLines(toJSON(out_msg), sock)
 }
 
 sr.start_server <- function() {
+  if (sr.debugEnabled) { print("sr.start_server()") }
+
   # We should always provide the port for this script to use, this is just so we can load this file with `source()` in
   # an R interpreter for testing purposes.  -Jeremy B November 2022
-  args <- commandArgs(trailingOnly = TRUE)
-  port <- ifelse(length(args) == 0, 9000, strtoi(args[1]))
+  port <- ifelse(length(sr.args) == 0, 9000, strtoi(sr.args[1]))
+  if (sr.debugEnabled) { print(paste("sr.start_server() port ", port)) }
+
   sock <- socketConnection(
     host = "localhost"
   , port = port
@@ -135,9 +151,14 @@ sr.start_server <- function() {
   )
 
   active <- TRUE
+  read_count = 0
   while (active) {
+    read_count = read_count + 1
+    if (sr.debugEnabled) { print(paste("sr.start_server() read_count ", read_count)) }
     tryCatch({
       msg_line <- readLines(sock, 1)
+      if (sr.debugEnabled) { print(paste("sr.start_server() msg_line ", msg_line)) }
+
       if (length(msg_line) != 0) {
         msg_parsed <- fromJSON(json_str = msg_line, simplify = TRUE)
         msg_type <- msg_parsed$type

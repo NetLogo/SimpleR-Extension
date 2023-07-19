@@ -178,3 +178,9 @@ SetPlotDeviceDoesNotCrashHeadless
   extensions [ sr ]
   O> sr:setup
   O> sr:set-plot-device
+
+EnableDebug
+  extensions [ sr ]
+  O> sr:__enable-debug
+  O> sr:setup
+  sr:runresult "1:3" => [1 2 3]

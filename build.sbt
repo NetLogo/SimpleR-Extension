@@ -6,7 +6,7 @@ enablePlugins(ExtensionDocumentationPlugin)
 
 lazy val rScriptFiles   = settingKey[Seq[File]]("list of R scripts to include in package and testing")
 lazy val commonSettings = Seq(
-  version    := "2.0.2"
+  version    := "2.0.3"
 , isSnapshot := true
 
 , rScriptFiles := Seq(baseDirectory.value / ".." / "src" / "rext.R", baseDirectory.value / ".." / "src" / "rlibs.R")
@@ -37,7 +37,7 @@ lazy val commonSettings = Seq(
 
 , resolvers += "netlogo-lang-extension" at "https://dl.cloudsmith.io/public/netlogo/language-library/maven"
 , libraryDependencies ++= Seq(
-    "org.nlogo.languagelibrary" %% "language-library" % "2.3.0"
+    "org.nlogo.languagelibrary" %% "language-library" % "2.4.0"
 , )
 )
 

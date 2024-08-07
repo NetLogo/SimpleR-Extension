@@ -12,7 +12,7 @@ AllCommands
   sr:runresult "b" => 10
 
 DefaultEnvironment
-  ## check that we can access variables from the environment that R gives us on startup. Note that this is different than the "empty" or "global" environment.
+  # check that we can access variables from the environment that R gives us on startup. Note that this is different than the "empty" or "global" environment.
   extensions [ sr ]
   O> sr:setup
   O> (sr:run "library(datasets)" "data(iris)")
@@ -173,6 +173,15 @@ SetAgentDataFrame4
   O> (sr:set-agent-data-frame "a" turtles "color" "heading" "shape")
   sr:runresult "a" => [["color" [15 105]] ["heading" [90 180]] ["shape" ["arrow" "wolf"]]]
   sr:runresult "class(a)" => "data.frame"
+
+NoHangOnRWarnings
+  extensions [ sr ]
+  O> sr:setup
+  # Prints a warning to the console
+  O> show sr:runresult "mean(\"boom\")"
+  sr:runresult "1:3" => [1 2 3]
+  sr:runresult "strsplit(123456789, \"2\")" => ERROR Extension exception: non-character argument
+  sr:runresult "1:3" => [1 2 3]
 
 SetPlotDeviceDoesNotCrashHeadless
   extensions [ sr ]

@@ -49,77 +49,77 @@ sr.send_error <- function(sock, message, longMessage) {
   writeLines(toJSON(err_msg), sock)
 }
 
-sr.statememt <- function(sock, body) {
-  if (sr.debugEnabled) { print(paste("sr.statememt() ", body)) }
-  sr.eval(body)
+sr.handle_warning <- function(expr) {
+  if (sr.debugEnabled) { print("sr.handle_warning()") }
+
+  tryCatch(expr, warning = function(w) {
+    writeLines(paste("Warning from R environment: ", w$message))
+  })
+}
+
+sr.write_out <- function(sock, type, body) {
+  if (sr.debugEnabled) { print("sr.write_out()") }
+
   out_msg <- list(
-    type = sr.succ_msg
-  , body = ""
+    type = type
+  , body = body
   )
   writeLines(toJSON(out_msg), sock)
+}
+
+sr.statememt <- function(sock, body) {
+  if (sr.debugEnabled) { print(paste("sr.statememt() ", body)) }
+  sr.handle_warning(expr = { sr.eval(body) })
+  sr.write_out(sock, sr.succ_msg, "")
 }
 
 sr.expression <- function(sock, body) {
   if (sr.debugEnabled) { print(paste("sr.expression() ", body)) }
-  res <- sr.eval(body)
-  out_msg <- list(
-    type = sr.succ_msg
-  , body = res
-  )
-  writeLines(toJSON(out_msg), sock)
+  res <- sr.handle_warning(expr = { sr.eval(body) })
+  sr.write_out(sock, sr.succ_msg, res)
 }
 
 sr.expression_stringified <- function(sock, body) {
   if (sr.debugEnabled) { print(paste("sr.expression_stringified() ", body)) }
-  res <- toString(sr.eval(body))
-  out_msg <- list(
-    type = sr.succ_msg
-  , body = res
-  )
-  writeLines(toJSON(out_msg), sock)
+  res <- sr.handle_warning(expr = { toString(sr.eval(body)) })
+  sr.write_out(sock, sr.succ_msg, res)
 }
 
 sr.assignment <- function(sock, body) {
   if (sr.debugEnabled) { print(paste("sr.assignment() ", body)) }
-  var_name <- body$varName
-  value    <- body$value
-  assign(var_name, value, envir = .GlobalEnv)
-  out_msg <- list(
-    type = sr.succ_msg
-  , body = ""
-  )
-  writeLines(toJSON(out_msg), sock)
+  sr.handle_warning(expr = {
+    var_name <- body$varName
+    value    <- body$value
+    assign(var_name, value, envir = .GlobalEnv)
+  })
+  sr.write_out(sock, sr.succ_msg, "")
 }
 
 sr.set_named_list <- function(sock, body) {
   if (sr.debugEnabled) { print(paste("sr.set_named_list() ", body)) }
-  var_name   <- body$varName
-  names_vec  <- unlist(body$names)
-  named_list <- setNames(body$values, names_vec)
-  assign(var_name, named_list, envir = .GlobalEnv)
-  out_msg <- list(
-    type = sr.succ_msg
-  , body = ""
-  )
-  writeLines(toJSON(out_msg), sock)
+  sr.handle_warning(expr = {
+    var_name   <- body$varName
+    names_vec  <- unlist(body$names)
+    named_list <- setNames(body$values, names_vec)
+    assign(var_name, named_list, envir = .GlobalEnv)
+  })
+  sr.write_out(sock, sr.succ_msg, "")
 }
 
 sr.set_data_frame <- function(sock, body) {
   if (sr.debugEnabled) { print(paste("sr.set_data_frame() ", body)) }
-  var_name <- body$varName
-  names    <- body$names
-  columns  <- body$columns
+  sr.handle_warning(expr = {
+    var_name <- body$varName
+    names    <- body$names
+    columns  <- body$columns
 
-  columns_vec <- lapply(columns, unlist)
-  data_frame  <- do.call(data.frame, columns_vec)
-  colnames(data_frame) <- unlist(names)
+    columns_vec <- lapply(columns, unlist)
+    data_frame  <- do.call(data.frame, columns_vec)
+    colnames(data_frame) <- unlist(names)
 
-  assign(var_name, data_frame, envir = .GlobalEnv)
-  out_msg <- list(
-    type = sr.succ_msg
-  , body = ""
-  )
-  writeLines(toJSON(out_msg), sock)
+    assign(var_name, data_frame, envir = .GlobalEnv)
+  })
+  sr.write_out(sock, sr.succ_msg, "")
 }
 
 sr.heartbeat <- function(sock) {
@@ -198,9 +198,11 @@ sr.start_server <- function() {
       sr.send_error(sock, e$message, e$message)
     },
 
+    # Warnings need to be handled by the specific message type. If something escapes to here, let's call it a failure to
+    # make sure the caller gets something back so it doesn't wait forever for a reply.  -Jeremy B August 2024
     warning = function(w) {
-      writeLines("warning")
-      writeLines(w$message)
+      long_error <- paste("Unexpected warning from R environment, treating as an error: ", w$message)
+      sr.send_error(sock, w$message, long_error)
     })
   }
 

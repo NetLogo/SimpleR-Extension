@@ -6,7 +6,7 @@ enablePlugins(ExtensionDocumentationPlugin)
 
 lazy val rScriptFiles   = settingKey[Seq[File]]("list of R scripts to include in package and testing")
 lazy val commonSettings = Seq(
-  version    := "2.0.3"
+  version    := "2.0.4"
 , isSnapshot := true
 
 , rScriptFiles := Seq(baseDirectory.value / ".." / "src" / "rext.R", baseDirectory.value / ".." / "src" / "rlibs.R")

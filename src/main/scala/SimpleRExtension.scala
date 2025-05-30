@@ -1,8 +1,12 @@
 package org.nlogo.extensions.simpler
 
 import com.fasterxml.jackson.core.JsonParser
-import org.json4s.jackson.JsonMethods.mapper
+import com.fasterxml.jackson.core.json.JsonReadFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.json.JsonMapper
+
 import org.json4s.JsonDSL._
+import org.json4s.jackson.{ JsonMethods, Json4sScalaModule }
 
 import org.nlogo.languagelibrary.{ Logger, Subprocess }
 import org.nlogo.languagelibrary.config.{ Config, Menu, Platform }
@@ -24,12 +28,12 @@ object SimpleRExtension {
   private var _longName = "SimpleR Extension"
   def longName: String = _longName
 
-  private var _extensionClass: Class[_] = classOf[SimpleRExtension]
-  def extensionClass: Class[_] = _extensionClass
+  private var _extensionClass: Class[?] = classOf[SimpleRExtension]
+  def extensionClass: Class[?] = _extensionClass
 
   // The vars above and this reset business is just for the deprecated R extensions functionality.  Once that old
   // extension stand-in is removed, this can also be removed.  -Jeremy B Octover 2022
-  def resetProps(codeName: String, longName: String, extensionClass: Class[_]) = {
+  def resetProps(codeName: String, longName: String, extensionClass: Class[?]) = {
     _codeName       = codeName
     _longName       = longName
     _extensionClass = extensionClass
@@ -88,6 +92,12 @@ object SimpleRExtension {
       // see docs in `rlibs.R` for what this is about
       import scala.sys.process._
       Seq(rRuntimePath, rLibFilePath, rExtUserDirPath).!
+
+      val mapper = new JsonMethods {
+        override def mapper: ObjectMapper =
+          JsonMapper.builder.addModule(new Json4sScalaModule).enable(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS).build()
+      }
+
       SimpleRExtension.rProcess = Subprocess.start(
         workspace
       , Seq(rRuntimePath)
@@ -95,6 +105,7 @@ object SimpleRExtension {
       , SimpleRExtension.codeName
       , SimpleRExtension.longName
       , Some(port)
+      , Option(mapper)
       )
       SimpleRExtension.menu.foreach(_.setup(SimpleRExtension.rProcess.evalStringified))
     } catch {
@@ -135,8 +146,6 @@ class SimpleRExtension extends DefaultClassManager {
   override def runOnce(em: ExtensionManager): Unit = {
     super.runOnce(em)
 
-    mapper.configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, true)
-
     SimpleRExtension._isHeadless = Platform.isHeadless(em)
     SimpleRExtension.menu        = Menu.create(em, SimpleRExtension.longName, SimpleRExtension.extLangBin, SimpleRExtension.config)
   }
@@ -170,7 +179,7 @@ object ShowConsole extends Command {
 
   override def perform(args: Array[Argument], context: Context): Unit = {
     if (!SimpleRExtension.isHeadless) {
-      SimpleRExtension.menu.foreach(_.showShellWindow)
+      SimpleRExtension.menu.foreach(_.showShellWindow())
     }
   }
 }
@@ -296,7 +305,7 @@ object SetAgent extends Command {
         values
 
       case agentset: AgentSet =>
-        import scala.collection.JavaConverters._
+        import scala.jdk.CollectionConverters.IterableHasAsScala
         val sampleAgent     = agentset.agents.iterator.next.asInstanceOf[Agent]
         val variableIndices = names.map( (varName) => sampleAgent.world.indexOfVariable(sampleAgent, varName.toUpperCase) )
         val agentsAsRows    = agentset.agents.asScala.map( (agent) => SetAgent.agentToValues(agent.asInstanceOf[Agent], variableIndices) )
@@ -325,7 +334,7 @@ object SetAgentDataFrame extends Command {
         Seq(SetAgent.agentToValues(agent, variableIndices))
 
       case agentset: AgentSet =>
-        import scala.collection.JavaConverters._
+        import scala.jdk.CollectionConverters.IterableHasAsScala
         val sampleAgent     = agentset.agents.iterator.next.asInstanceOf[Agent]
         val variableIndices = names.map( (varName) => sampleAgent.world.indexOfVariable(sampleAgent, varName.toUpperCase) )
         agentset.agents.asScala.map( (agent) => SetAgent.agentToValues(agent.asInstanceOf[Agent], variableIndices) )

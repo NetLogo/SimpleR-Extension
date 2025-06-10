@@ -5,6 +5,9 @@ import com.fasterxml.jackson.core.json.JsonReadFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.json.JsonMapper
 
+import java.io.File
+import java.net.ServerSocket
+
 import org.json4s.JsonDSL._
 import org.json4s.jackson.{ JsonMethods, Json4sScalaModule }
 
@@ -13,10 +16,9 @@ import org.nlogo.languagelibrary.config.{ Config, Menu, Platform }
 import org.nlogo.languagelibrary.prims.{ EnableDebug }
 import org.nlogo.agent.{ Agent, AgentSet }
 import org.nlogo.api.{ Argument, Command, Context, DefaultClassManager, ExtensionException, ExtensionManager, FileIO, PrimitiveManager, Reporter, Workspace }
+import org.nlogo.app.App
 import org.nlogo.core.{ LogoList, Syntax }
-
-import java.io.File
-import java.net.ServerSocket
+import org.nlogo.theme.ThemeSync
 
 object SimpleRExtension {
   private var _isHeadless: Boolean = false
@@ -123,7 +125,7 @@ object SimpleRExtension {
 
 }
 
-class SimpleRExtension extends DefaultClassManager {
+class SimpleRExtension extends DefaultClassManager with ThemeSync {
   def load(manager: PrimitiveManager): Unit = {
     manager.addPrimitive("setup", SetupR)
     manager.addPrimitive("run", Run)
@@ -148,14 +150,21 @@ class SimpleRExtension extends DefaultClassManager {
 
     SimpleRExtension._isHeadless = Platform.isHeadless(em)
     SimpleRExtension.menu        = Menu.create(em, SimpleRExtension.longName, SimpleRExtension.extLangBin, SimpleRExtension.config)
+
+    App.app.addSyncComponent(this)
   }
 
   override def unload(em: ExtensionManager): Unit = {
     super.unload(em)
     SimpleRExtension.killR()
     SimpleRExtension.menu.foreach(_.unload())
+
+    App.app.removeSyncComponent(this)
   }
 
+  override def syncTheme(): Unit = {
+    SimpleRExtension.menu.foreach(_.syncTheme())
+  }
 }
 
 object SetupR extends Command {

@@ -5,8 +5,10 @@ import com.fasterxml.jackson.core.json.JsonReadFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.json.JsonMapper
 
+import java.awt.event.ActionEvent
 import java.io.File
 import java.net.ServerSocket
+import javax.swing.AbstractAction
 
 import org.json4s.JsonDSL._
 import org.json4s.jackson.{ JsonMethods, Json4sScalaModule }
@@ -18,6 +20,7 @@ import org.nlogo.agent.{ Agent, AgentSet }
 import org.nlogo.api.{ Argument, Command, Context, DefaultClassManager, ExtensionException, ExtensionManager, FileIO, PrimitiveManager, Reporter, Workspace }
 import org.nlogo.app.App
 import org.nlogo.core.{ LogoList, Syntax }
+import org.nlogo.swing.MenuItem
 import org.nlogo.theme.ThemeSync
 
 object SimpleRExtension {
@@ -151,6 +154,20 @@ class SimpleRExtension extends DefaultClassManager with ThemeSync {
     SimpleRExtension._isHeadless = Platform.isHeadless(em)
     SimpleRExtension.menu        = Menu.create(em, SimpleRExtension.longName, SimpleRExtension.extLangBin, SimpleRExtension.config)
 
+    SimpleRExtension.menu.foreach { menu =>
+      menu.addSeparator()
+
+      menu.add(new MenuItem(new AbstractAction("Convert code from R extension") {
+        override def actionPerformed(e: ActionEvent): Unit = {
+          val tabManager = App.app.tabManager
+
+          (tabManager.mainCodeTab +: tabManager.getExternalFileTabs).foreach { tab =>
+            tab.innerSource = convertSource(tab.innerSource)
+          }
+        }
+      }))
+    }
+
     App.app.addSyncComponent(this)
   }
 
@@ -158,8 +175,33 @@ class SimpleRExtension extends DefaultClassManager with ThemeSync {
     super.unload(em)
     SimpleRExtension.killR()
     SimpleRExtension.menu.foreach(_.unload())
+    SimpleRExtension.menu = None
 
     App.app.removeSyncComponent(this)
+  }
+
+  private def convertSource(source: String): String = {
+    val map = Map(
+      "r:put" -> "sr:set",
+      "r:get" -> "sr:runresult",
+      "r:eval" -> "sr:run",
+      "r:__evaldirect" -> "sr:run",
+      "r:putlist" -> "sr:set-list",
+      "r:putnamedlist" -> "sr:set-named-list",
+      "r:putdataframe" -> "sr:set-data-frame",
+      "r:putagent" -> "sr:set-agent",
+      "r:putagentdf" -> "sr:set-agent-data-frame",
+      "r:setplotdevice" -> "sr:set-plot-device",
+      "r:interactiveshell" -> "sr:show-console",
+      "r:clear" -> "sr:setup",
+      "r:clearlocal" -> "sr:setup",
+      "r:gc" -> "",
+      "r:stop" -> ""
+    )
+
+    map.foldLeft(source) {
+      case (str, (key, value)) => str.replaceAll(s"""(?i)(^|[^a-z0-9_\\-])$key($$|[^a-z0-9_\\-])""", s"$$1$value$$2")
+    }
   }
 
   override def syncTheme(): Unit = {

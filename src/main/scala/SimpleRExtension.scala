@@ -154,21 +154,23 @@ class SimpleRExtension extends DefaultClassManager with ThemeSync {
     SimpleRExtension._isHeadless = Platform.isHeadless(em)
     SimpleRExtension.menu        = Menu.create(em, SimpleRExtension.longName, SimpleRExtension.extLangBin, SimpleRExtension.config)
 
-    SimpleRExtension.menu.foreach { menu =>
-      menu.addSeparator()
+    if (App.app != null) {
+      SimpleRExtension.menu.foreach { menu =>
+        menu.addSeparator()
 
-      menu.add(new MenuItem(new AbstractAction("Convert code from R extension") {
-        override def actionPerformed(e: ActionEvent): Unit = {
-          val tabManager = App.app.tabManager
+        menu.add(new MenuItem(new AbstractAction("Convert code from R extension") {
+          override def actionPerformed(e: ActionEvent): Unit = {
+            val tabManager = App.app.tabManager
 
-          (tabManager.mainCodeTab +: tabManager.getExternalFileTabs).foreach { tab =>
-            tab.innerSource = convertSource(tab.innerSource)
+            (tabManager.mainCodeTab +: tabManager.getExternalFileTabs).foreach { tab =>
+              tab.innerSource = convertSource(tab.innerSource)
+            }
           }
-        }
-      }))
-    }
+        }))
+      }
 
-    App.app.addSyncComponent(this)
+      App.app.addSyncComponent(this)
+    }
   }
 
   override def unload(em: ExtensionManager): Unit = {
@@ -177,7 +179,8 @@ class SimpleRExtension extends DefaultClassManager with ThemeSync {
     SimpleRExtension.menu.foreach(_.unload())
     SimpleRExtension.menu = None
 
-    App.app.removeSyncComponent(this)
+    if (App.app != null)
+      App.app.removeSyncComponent(this)
   }
 
   private def convertSource(source: String): String = {

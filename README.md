@@ -365,6 +365,37 @@ sr:set-plot-device
 Activates the visual plot device for R, popping open a window if one is not already open.
 
 
+### `sr:r-home`
+
+```NetLogo
+sr:r-home
+```
+
+
+
+Outputs the R home directory which is the top-level directory of the R installation
+being run.
+
+```netlogo
+observer> sr:setup
+observer> show sr:r-home
+observer: "/Library/Frameworks/R.framework/Resources"
+```
+
+
+
+### `sr:show-console`
+
+```NetLogo
+sr:show-console
+```
+
+
+
+Opens the R console. This console can be opened via the menu bar under the SimpleR heading
+
+
+
 ## Transitioning from the old R extension
 
 As of version 2.0 of the Simple R extension, most primitives from the old R extension

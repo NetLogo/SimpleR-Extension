@@ -5,14 +5,17 @@ This NetLogo extension allows you to run R code from within NetLogo.
 
 ## Building
 
-Run `sbt simpleR/package`.  If compilation succeeds, `sr.jar` will be created in the `root-simple-r/` folder, and the required dependencies will be copied there as well.  For testing, copy all the `jar` files and `rext.r` from the repository root to a `sr` directory inside your NetLogo `extensions` directory.  To package for release to the extensions library, run `simpleR/packageZip`.
+Run `sbt simpleR/package`.  If compilation succeeds, `sr.jar`
+will be created in the `root-simple-r/` folder, and the required
+dependencies will be copied there as well.  For testing, copy all the `jar` files and `rext.r` from the repository root to a `sr` directory inside your NetLogo `extensions` directory.  To package for release to the extensions library, run `simpleR/packageZip`.
 
 ## Using
 
 To run R code you must install R and have the `R` executable on your `PATH`.
 You can download R from [their site](https://www.r-project.org/).
 
-To use this extension, you must first include it at the top of your NetLogo model code in an `extensions` declaration.
+To use this extension, you must first include it at the top of your NetLogo
+model code in an `extensions` declaration.
 
 ```netlogo
 extensions [
@@ -21,7 +24,8 @@ extensions [
 ]
 ```
 
-You must then initialize the R environment with `sr:setup`. This only needs to be done once per session.
+You must then initialize the R environment with `sr:setup`.
+This only needs to be done once per session.
 Any subsequent calls will reset your R environment.
 
 Here's an example to get you started:
@@ -42,11 +46,15 @@ observer> show sr:runresult "center_patch_color"
 observer: 15 ;; the NetLogo representation of the color red
 ```
 
-See the documentation for each of the particular primitives for details on, for instance, how to multi-line statements and how object type conversions work.
+See the documentation for each of the particular primitives for details on,
+for instance, how to multi-line statements and how object type conversions work.
 
-The extension also includes an interactive R console/REPL that is connected to the same R environment as the main window's NetLogo environment.
-It is useful for executing longer blocks of R code or quickly examining or modifying R values.
-This console can be opened via the menu bar under the SimpleR heading.
+The extension also includes an interactive R console/REPL that is connected to
+the same R environment as the main window's NetLogo environment.
+It is useful for executing longer blocks of R code or quickly examining or modifying
+R values.
+This console can be opened via the menu bar under the SimpleR heading,
+or by using the `sr:show-console` command.
 
 ### Error handling
 
@@ -56,7 +64,8 @@ R errors will be reported in NetLogo as "Extension exceptions". For instance, th
 sr:run "stop('hi')"
 ```
 
-will result in the NetLogo error "Extension exception: hi".
+will result in the NetLogo error "Extension exception: hi" appearing in an
+error  dialog.
 
 ## Citing Simple R in Research
 
@@ -90,7 +99,10 @@ sr:run *R-statement*
 
 
 Runs the given R statements in the current session.
-To make multi-line R code easier to run, this command will take multiple strings, each of which will be interpreted as a separate line of R code.
+To make multi-line R code easier to run, this command will take multiple strings,
+each of which will be interpreted as a separate line of R code. This requires
+putting the command in parentheses.
+
 For instance:
 
 ```NetLogo
@@ -123,18 +135,25 @@ Evaluates the given R expression and reports the result.
 `rs:runresult` attempts to convert from R data types to NetLogo data types.
 
 
-Numbers, strings, and booleans convert as you would expect, except for outliers like Infinity and NaN which will be converted into the strings 'Inf' and 'NaN', respectively.
+Numbers, strings, and booleans convert as you would expect, except for outliers
+like Infinity and NaN which will be converted into the strings 'Inf' and 'NaN',
+respectively.
 
 
-R vectors and R lists will be converted to NetLogo lists. NA values will be converted into the string 'NA'.
+R vectors and R lists will be converted to NetLogo lists. NA values will be
+converted into the string 'NA'.
 
 
 R matrices will be flattened into one-dimensional lists using column-major order.
-If you want to convert a matrix into a list of lists before sending it to NetLogo, use the R `asplit` command.
-To convert into a list of column lists, use `asplit(<matrix>, 1)`; for a list of row lists, use `asplit(<matrix>, 2)`.
+If you want to convert a matrix into a list of lists before sending it to NetLogo,
+use the R `asplit` command.
+To convert into a list of column lists, use `asplit(<matrix>, 1)`;
+for a list of row lists, use `asplit(<matrix>, 2)`.
 
 
-An R DataFrame will be converted into a list of lists, where the first item in each sublist is the name of the column and the second item is a list containing all that row data.
+An R DataFrame will be converted into a list of lists, where the first item in
+each sublist is the name of the column and the second item is a list containing
+all that row data.
 For example, the first 6 rows of the `iris` dataset will be converted into NetLogo like so:
 ```NetLogo
 [
@@ -146,7 +165,8 @@ For example, the first 6 rows of the `iris` dataset will be converted into NetLo
 ]
 ```
 
-Other objects will be converted to a string representation if possible and and may throw an error if not.
+Other objects will be converted to a string representation if possible and and may throw
+an error if not.
 
 
 
@@ -161,7 +181,9 @@ Sets a variable in the R session with the given name to the given NetLogo value.
 NetLogo objects will be converted to R objects as expected.
 
 
-Note that lists in NetLogo are converted into lists in R if the elements are of different types.  If all the elements of a NetLogo list are of the identical number, boolean, or string type then the data will be automatically converted into a vector in R.
+Note that lists in NetLogo are converted into lists in R if the elements are of different
+types.  If all the elements of a NetLogo list are of the identical number, boolean, or
+string type then the data will be automatically converted into a vector in R.
 
 ```NetLogo
 sr:set "x" 42
@@ -175,7 +197,9 @@ show sr:runresult "y" ;; reports [1 2 3]
 
 Agents are converted into lists with named elements for each agent variable.
 
-Agentsets are converted into a list of the above lists. If you want to convert agents to a data frame, see `sr:set-agent-data-frame`.  If you want to use `sr:set` and do the conversion manually, try the following:
+Agentsets are converted into a list of the above lists. If you want to convert
+agents to a data frame, see `sr:set-agent-data-frame`.  If you want to use `sr:set`
+and do the conversion manually, try the following:
 
 ```R
 my_data_frame <- as.data.frame(do.call(rbind, <agentset-list-of-lists>))
@@ -258,7 +282,10 @@ sr:set-agent-data-frame *r-variable-name* *agents* *agent-variable-name*
 (sr:set-agent-data-frame *r-variable-name* *agents* *agent-variable-name1* *agent-variable-name2...*)
 ```
 
-Creates a new data frame in R with the given variable name.  The columns will have the names of the NetLogo agent variables used and each row will be one agent's data.  If you want multiple agent variables make sure to surround the command in parenthesis.
+Creates a new data frame in R with the given variable name.
+    The columns will have the names of the NetLogo agent variables used and each row will
+    be one agent's data.  If you want multiple agent variables make sure to surround
+    the command in parenthesis.
 
 ```
 clear-all
@@ -340,7 +367,13 @@ Activates the visual plot device for R, popping open a window if one is not alre
 
 ## Transitioning from the old R extension
 
-As of version 2.0 of the Simple R extension, most primitives from the old R extension have a direct equivalent you can switch over to use, with a different name but identical syntax.  One change in functionality is that when a named list with a single row and column is returned, in the R extension you'd get simply the value, in the Simple R extension you will get a list with the column name and the value as elements.  If there is more than 1 element, you will get a list with the column name and a list of the values.
+As of version 2.0 of the Simple R extension, most primitives from the old R extension
+have a direct equivalent you can switch over to use, with a different name but identical
+syntax.  One change in functionality is that when a named list with a single row and
+column is returned, in the R extension you'd get simply the value, in the Simple R
+extension you will get a list with the column name and the value as elements.
+If there is more than 1 element, you will get a list with the column name and a list
+of the values.
 
 | R Extension Primitive | Simple R Extension Primitive                                       |
 | --------------------- | ------------------------------------------------------------------ |

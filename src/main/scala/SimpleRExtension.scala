@@ -19,8 +19,8 @@ import org.nlogo.languagelibrary.prims.{ EnableDebug }
 import org.nlogo.agent.{ Agent, AgentSet }
 import org.nlogo.api.{ Argument, Command, Context, DefaultClassManager, ExtensionException, ExtensionManager, FileIO, PrimitiveManager, Reporter, Workspace }
 import org.nlogo.app.App
-import org.nlogo.core.{ LogoList, Syntax }
-import org.nlogo.swing.MenuItem
+import org.nlogo.core.{ I18N, LogoList, Syntax }
+import org.nlogo.swing.{ MenuItem, OptionPane }
 import org.nlogo.theme.ThemeSync
 
 object SimpleRExtension {
@@ -162,8 +162,17 @@ class SimpleRExtension extends DefaultClassManager with ThemeSync {
           override def actionPerformed(e: ActionEvent): Unit = {
             val tabManager = App.app.tabManager
 
-            (tabManager.mainCodeTab +: tabManager.getExternalFileTabs).foreach { tab =>
+            val anySetup = (tabManager.mainCodeTab +: tabManager.getExternalFileTabs).exists { tab =>
               tab.innerSource = convertSource(tab.innerSource)
+
+              """(?i)(^|[^a-z0-9_\\-])sr:setup($|[^a-z0-9_\\-])""".r.findFirstIn(tab.innerSource).isDefined
+            }
+
+            if (!anySetup) {
+              new OptionPane(App.app.frame, I18N.gui.get("common.messages.warning"),
+                             """This model does not use the sr:setup primitive.
+                                You must call it before using any other Simple R primitives.""",
+                             OptionPane.Options.Ok, OptionPane.Icons.Warning)
             }
           }
         }))

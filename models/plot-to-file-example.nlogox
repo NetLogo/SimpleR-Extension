@@ -51,7 +51,7 @@ end</code>
     <button x="10" y="245" height="35" disableUntilTicks="false" forever="false" kind="Observer" width="79">test-plot</button>
     <note x="10" y="195" backgroundDark="0" fontSize="12" width="215" markdown="false" height="40" textColorDark="-1" textColorLight="-16777216" backgroundLight="0"><![CDATA[test-plot  creates scatter plots  named
 <plotfile>.pdf and <plotfile>.jpg]]></note>
-    <input x="10" multiline="false" y="75" height="60" variable="plotfile" type="string" width="190">/Users/aab1638/ModelsNetLogo/extensions/sr/examples/foo.pdf</input>
+    <input x="10" multiline="false" y="75" height="60" variable="plotfile" type="string" width="190">plot-output.pdf</input>
     <note x="10" y="140" backgroundDark="0" fontSize="11" width="215" markdown="false" height="28" textColorDark="-1" textColorLight="-16777216" backgroundLight="0">If editing plotfile, don't use backslashes</note>
   </widgets>
   <info>## WHAT IS IT?

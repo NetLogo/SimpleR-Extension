@@ -1,5 +1,4 @@
-
-# Netlogo Simple R Extension
+# NetLogo Simple R Extension
 
 This NetLogo extension allows you to run R code from within NetLogo.
 
@@ -74,6 +73,19 @@ If you use the Simple R extension in research, we ask that you cite us,
 Hovet, J. Head, B. & Wilensky, U. (2022). “Simple R NetLogo extension”. https://github.com/NetLogo/SimpleR-Extension Evanston, IL: Center for Connected Learning and Computer Based Modeling, Northwestern University.
 
 ## Primitives
+
+[`sr:setup`](#srsetup)
+[`sr:run`](#srrun)
+[`sr:runresult`](#srrunresult)
+[`sr:set`](#srset)
+[`sr:set-agent`](#srset-agent)
+[`sr:set-agent-data-frame`](#srset-agent-data-frame)
+[`sr:set-data-frame`](#srset-data-frame)
+[`sr:set-list`](#srset-list)
+[`sr:set-named-list`](#srset-named-list)
+[`sr:set-plot-device`](#srset-plot-device)
+[`sr:r-home`](#srr-home)
+[`sr:show-console`](#srshow-console)
 
 
 ### `sr:setup`
@@ -392,7 +404,7 @@ sr:show-console
 
 
 
-Opens the R console. This console can be opened via the menu bar under the SimpleR heading
+Opens the R console. This console can be opened via the menu bar under the SimpleR heading.
 
 
 

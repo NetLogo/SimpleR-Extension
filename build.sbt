@@ -13,7 +13,7 @@ lazy val rScriptFiles   = settingKey[Seq[File]]("list of R scripts to include in
 
 rScriptFiles := Seq(baseDirectory.value / "src" / "rext.R", baseDirectory.value / "src" / "rlibs.R")
 
-netLogoVersion       := "7.0.0-beta2-8cd3e65"
+netLogoVersion       := "7.0.0-beta2-7e8f7a4"
 netLogoPackageExtras ++= rScriptFiles.value.map( (f) => (f, None) )
 netLogoZipExtras     ++= Seq(baseDirectory.value / "demos", baseDirectory.value / "README.md")
 

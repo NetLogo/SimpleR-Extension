@@ -19,7 +19,7 @@ if (!suppressPackageStartupMessages(require("rjson"))) {
   suppressPackageStartupMessages(
     install.packages(
       "rjson"
-    , repos = "http://cran.us.r-project.org"
+    , repos = "https://cran.case.edu/"
     , quiet = TRUE
     , lib = rExtensionLibraryPath
     )

@@ -148,7 +148,7 @@ to calc-diversity
     ]
     set counter counter + 1
   ]
-
+  
   set-histogram-num-bars 20
   set-current-plot "pielou"
   histogram filter is-number? [pielou] of patches

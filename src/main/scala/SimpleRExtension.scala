@@ -1,11 +1,14 @@
 package org.nlogo.extensions.simpler
 
+import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.json.JsonReadFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.json.JsonMapper
 
+import java.awt.event.ActionEvent
 import java.io.File
 import java.net.ServerSocket
+import javax.swing.AbstractAction
 
 import org.json4s.JsonDSL._
 import org.json4s.jackson.{ JsonMethods, Json4sScalaModule }
@@ -16,7 +19,8 @@ import org.nlogo.languagelibrary.prims.{ EnableDebug }
 import org.nlogo.agent.{ Agent, AgentSet }
 import org.nlogo.api.{ Argument, Command, Context, DefaultClassManager, ExtensionException, ExtensionManager, FileIO, PrimitiveManager, Reporter, Workspace }
 import org.nlogo.app.App
-import org.nlogo.core.{ LogoList, Syntax }
+import org.nlogo.core.{ I18N, LogoList, Syntax }
+import org.nlogo.swing.{ MenuItem, OptionPane }
 import org.nlogo.theme.ThemeSync
 
 object SimpleRExtension {
@@ -108,8 +112,7 @@ object SimpleRExtension {
       , Some(port)
       , Option(mapper)
       )
-      if (!SimpleRExtension.isHeadless)
-        SimpleRExtension.menu.foreach(_.setup(SimpleRExtension.rProcess.evalStringified))
+      SimpleRExtension.menu.foreach(_.setup(SimpleRExtension.rProcess.evalStringified))
     } catch {
       case e: Exception => {
         println(e)
@@ -125,14 +128,7 @@ object SimpleRExtension {
 
 }
 
-class SimpleRExtension extends DefaultClassManager {
-  // directly inheriting from ThemeSync causes class def not found errors in headless (Isaac B 8/27/25)
-  private lazy val themeSync = new ThemeSync {
-    override def syncTheme(): Unit = {
-      SimpleRExtension.this.syncTheme()
-    }
-  }
-
+class SimpleRExtension extends DefaultClassManager with ThemeSync {
   def load(manager: PrimitiveManager): Unit = {
     manager.addPrimitive("setup", SetupR)
     manager.addPrimitive("run", Run)
@@ -156,45 +152,44 @@ class SimpleRExtension extends DefaultClassManager {
     super.runOnce(em)
 
     SimpleRExtension._isHeadless = Platform.isHeadless(em)
+    SimpleRExtension.menu        = Menu.create(em, SimpleRExtension.longName, SimpleRExtension.extLangBin, SimpleRExtension.config)
 
-    if (!SimpleRExtension.isHeadless) {
-      SimpleRExtension.menu = Menu.create(em, SimpleRExtension.longName, SimpleRExtension.extLangBin,
-                                          SimpleRExtension.config)
-
+    if (App.app != null) {
       SimpleRExtension.menu.foreach { menu =>
         menu.addSeparator()
-        menu.addMenuItem("Convert code from R extension", () => {
-          val tabManager = App.app.tabManager
 
-          val anySetup = (tabManager.mainCodeTab +: tabManager.getExternalFileTabs).exists { tab =>
-            tab.innerSource = convertSource(tab.innerSource)
+        menu.add(new MenuItem(new AbstractAction("Convert code from R extension") {
+          override def actionPerformed(e: ActionEvent): Unit = {
+            val tabManager = App.app.tabManager
 
-            """(?i)(^|[^a-z0-9_\\-])sr:setup($|[^a-z0-9_\\-])""".r.findFirstIn(tab.innerSource).isDefined
+            val anySetup = (tabManager.mainCodeTab +: tabManager.getExternalFileTabs).exists { tab =>
+              tab.innerSource = convertSource(tab.innerSource)
+
+              """(?i)(^|[^a-z0-9_\\-])sr:setup($|[^a-z0-9_\\-])""".r.findFirstIn(tab.innerSource).isDefined
+            }
+
+            if (!anySetup) {
+              new OptionPane(App.app.frame, I18N.gui.get("common.messages.warning"),
+                             """This model does not use the sr:setup primitive.
+                                You must call it before using any other Simple R primitives.""",
+                             OptionPane.Options.Ok, OptionPane.Icons.Warning)
+            }
           }
-
-          if (!anySetup) {
-            // don't directly instantiate OptionPane for a warning dialog, or
-            // it will throw class def not found errors in headless (Isaac B 8/27/25)
-            App.app.warningDialog("Warning", """This model does not use the sr:setup primitive.
-                                                You must call it before using any other Simple R primitives.""")
-          }
-        })
+        }))
       }
 
-      App.app.addSyncComponent(themeSync)
+      App.app.addSyncComponent(this)
     }
   }
 
   override def unload(em: ExtensionManager): Unit = {
     super.unload(em)
     SimpleRExtension.killR()
+    SimpleRExtension.menu.foreach(_.unload())
+    SimpleRExtension.menu = None
 
-    if (!SimpleRExtension.isHeadless) {
-      SimpleRExtension.menu.foreach(_.unload())
-      SimpleRExtension.menu = None
-
-      App.app.removeSyncComponent(themeSync)
-    }
+    if (App.app != null)
+      App.app.removeSyncComponent(this)
   }
 
   private def convertSource(source: String): String = {
@@ -221,7 +216,7 @@ class SimpleRExtension extends DefaultClassManager {
     }
   }
 
-  def syncTheme(): Unit = {
+  override def syncTheme(): Unit = {
     SimpleRExtension.menu.foreach(_.syncTheme())
   }
 }
@@ -246,8 +241,9 @@ object ShowConsole extends Command {
   override def getSyntax: Syntax = Syntax.commandSyntax(right = List())
 
   override def perform(args: Array[Argument], context: Context): Unit = {
-    if (!SimpleRExtension.isHeadless)
+    if (!SimpleRExtension.isHeadless) {
       SimpleRExtension.menu.foreach(_.showShellWindow())
+    }
   }
 }
 

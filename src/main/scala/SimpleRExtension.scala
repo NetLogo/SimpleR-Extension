@@ -5,23 +5,18 @@ import com.fasterxml.jackson.core.json.JsonReadFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.json.JsonMapper
 
-import java.awt.event.ActionEvent
 import java.io.File
 import java.net.ServerSocket
-import javax.swing.AbstractAction
 
 import org.json4s.JsonDSL._
 import org.json4s.jackson.{ JsonMethods, Json4sScalaModule }
 
 import org.nlogo.languagelibrary.{ Logger, Subprocess }
-import org.nlogo.languagelibrary.config.{ Config, Menu, Platform }
+import org.nlogo.languagelibrary.config.{ Config, Platform }
 import org.nlogo.languagelibrary.prims.{ EnableDebug }
 import org.nlogo.agent.{ Agent, AgentSet }
 import org.nlogo.api.{ Argument, Command, Context, DefaultClassManager, ExtensionException, ExtensionManager, FileIO, PrimitiveManager, Reporter, Workspace }
-import org.nlogo.app.App
-import org.nlogo.core.{ I18N, LogoList, Syntax }
-import org.nlogo.swing.{ MenuItem, OptionPane }
-import org.nlogo.theme.ThemeSync
+import org.nlogo.core.{ LogoList, Syntax }
 
 object SimpleRExtension {
   private var _isHeadless: Boolean = false
@@ -51,7 +46,7 @@ object SimpleRExtension {
     val SET_DATA_FRAME = 901
   }
 
-  var menu: Option[Menu] = None
+  var srMenu: SRMenu = new SRMenuHeadless
   def config: Config =
     Config.createForPropertyFile(SimpleRExtension.extensionClass, SimpleRExtension.codeName)
 
@@ -112,7 +107,7 @@ object SimpleRExtension {
       , Some(port)
       , Option(mapper)
       )
-      SimpleRExtension.menu.foreach(_.setup(SimpleRExtension.rProcess.evalStringified))
+      SimpleRExtension.srMenu.setup()
     } catch {
       case e: Exception => {
         println(e)
@@ -128,7 +123,10 @@ object SimpleRExtension {
 
 }
 
-class SimpleRExtension extends DefaultClassManager with ThemeSync {
+class SimpleRExtension extends DefaultClassManager {
+
+  private var componentIDOpt: Option[Long] = None
+
   def load(manager: PrimitiveManager): Unit = {
     manager.addPrimitive("setup", SetupR)
     manager.addPrimitive("run", Run)
@@ -152,73 +150,21 @@ class SimpleRExtension extends DefaultClassManager with ThemeSync {
     super.runOnce(em)
 
     SimpleRExtension._isHeadless = Platform.isHeadless(em)
-    SimpleRExtension.menu        = Menu.create(em, SimpleRExtension.longName, SimpleRExtension.extLangBin, SimpleRExtension.config)
 
-    if (App.app != null) {
-      SimpleRExtension.menu.foreach { menu =>
-        menu.addSeparator()
-
-        menu.add(new MenuItem(new AbstractAction("Convert code from R extension") {
-          override def actionPerformed(e: ActionEvent): Unit = {
-            val tabManager = App.app.tabManager
-
-            val anySetup = (tabManager.mainCodeTab +: tabManager.getExternalFileTabs).exists { tab =>
-              tab.innerSource = convertSource(tab.innerSource)
-
-              """(?i)(^|[^a-z0-9_\\-])sr:setup($|[^a-z0-9_\\-])""".r.findFirstIn(tab.innerSource).isDefined
-            }
-
-            if (!anySetup) {
-              new OptionPane(App.app.frame, I18N.gui.get("common.messages.warning"),
-                             """This model does not use the sr:setup primitive.
-                                You must call it before using any other Simple R primitives.""",
-                             OptionPane.Options.Ok, OptionPane.Icons.Warning)
-            }
-          }
-        }))
-      }
-
-      App.app.addSyncComponent(this)
+    if (!SimpleRExtension.isHeadless) {
+      SimpleRExtension.srMenu = new SRMenuGUI
+      SimpleRExtension.srMenu.init(em, SimpleRExtension.longName, SimpleRExtension.extLangBin, SimpleRExtension.config)
     }
+
   }
 
   override def unload(em: ExtensionManager): Unit = {
     super.unload(em)
     SimpleRExtension.killR()
-    SimpleRExtension.menu.foreach(_.unload())
-    SimpleRExtension.menu = None
-
-    if (App.app != null)
-      App.app.removeSyncComponent(this)
+    SimpleRExtension.srMenu.unload()
+    SimpleRExtension.srMenu.teardown()
   }
 
-  private def convertSource(source: String): String = {
-    val map = Map(
-      "r:put" -> "sr:set",
-      "r:get" -> "sr:runresult",
-      "r:eval" -> "sr:run",
-      "r:__evaldirect" -> "sr:run",
-      "r:putlist" -> "sr:set-list",
-      "r:putnamedlist" -> "sr:set-named-list",
-      "r:putdataframe" -> "sr:set-data-frame",
-      "r:putagent" -> "sr:set-agent",
-      "r:putagentdf" -> "sr:set-agent-data-frame",
-      "r:setplotdevice" -> "sr:set-plot-device",
-      "r:interactiveshell" -> "sr:show-console",
-      "r:clear" -> "sr:setup",
-      "r:clearlocal" -> "sr:setup",
-      "r:gc" -> "",
-      "r:stop" -> ""
-    )
-
-    map.foldLeft(source) {
-      case (str, (key, value)) => str.replaceAll(s"""(?i)(^|[^a-z0-9_\\-])$key($$|[^a-z0-9_\\-])""", s"$$1$value$$2")
-    }
-  }
-
-  override def syncTheme(): Unit = {
-    SimpleRExtension.menu.foreach(_.syncTheme())
-  }
 }
 
 object SetupR extends Command {
@@ -242,7 +188,7 @@ object ShowConsole extends Command {
 
   override def perform(args: Array[Argument], context: Context): Unit = {
     if (!SimpleRExtension.isHeadless) {
-      SimpleRExtension.menu.foreach(_.showShellWindow())
+      SimpleRExtension.srMenu.showConsole()
     }
   }
 }

@@ -14,7 +14,7 @@ lazy val rScriptFiles   = settingKey[Seq[File]]("list of R scripts to include in
 rScriptFiles := Seq(baseDirectory.value / "src" / "rext.R", baseDirectory.value / "src" / "rlibs.R")
 
 // This version number gets ignored.  The NL version comes from the Language Library.  --Jason B. (8/28/25)
-netLogoVersion       := "7.0.0-RC1-e8801f2"
+netLogoVersion       := "7.0.0-424b50b"
 netLogoPackageExtras ++= rScriptFiles.value.map( (f) => (f, None) )
 netLogoZipExtras     ++= Seq(baseDirectory.value / "demos", baseDirectory.value / "README.md")
 

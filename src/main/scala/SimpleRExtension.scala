@@ -12,14 +12,14 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.{ JsonMethods, Json4sScalaModule }
 
 import org.nlogo.languagelibrary.{ Logger, Subprocess }
-import org.nlogo.languagelibrary.config.{ Config, Platform }
+import org.nlogo.languagelibrary.config.Config
 import org.nlogo.languagelibrary.prims.{ EnableDebug }
 import org.nlogo.agent.{ Agent, AgentSet }
 import org.nlogo.api.{ Argument, Command, Context, DefaultClassManager, ExtensionException, ExtensionManager, FileIO, PrimitiveManager, Reporter, Workspace }
 import org.nlogo.core.{ LogoList, Syntax }
 
 object SimpleRExtension {
-  private var _isHeadless: Boolean = false
+  private var _isHeadless = true
   def isHeadless: Boolean = _isHeadless
 
   private var _codeName = "sr"
@@ -149,7 +149,7 @@ class SimpleRExtension extends DefaultClassManager {
   override def runOnce(em: ExtensionManager): Unit = {
     super.runOnce(em)
 
-    SimpleRExtension._isHeadless = Platform.isHeadless(em)
+    SimpleRExtension._isHeadless = !em.workspaceContext.workspaceGUI
 
     if (!SimpleRExtension.isHeadless) {
       SimpleRExtension.srMenu = new SRMenuGUI

@@ -8,7 +8,7 @@ import org.nlogo.app.App
 import org.nlogo.core.I18N
 import org.nlogo.swing.{ MenuItem, OptionPane }
 
-import org.nlogo.languagelibrary.config.{ Config, Menu, Platform }
+import org.nlogo.languagelibrary.config.{ Config, Menu }
 
 trait SRMenu {
 

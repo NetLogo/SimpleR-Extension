@@ -14,7 +14,7 @@ lazy val rScriptFiles   = settingKey[Seq[File]]("list of R scripts to include in
 rScriptFiles := Seq(baseDirectory.value / "src" / "rext.R", baseDirectory.value / "src" / "rlibs.R")
 
 // This version number gets ignored.  The NL version comes from the Language Library.  --Jason B. (8/28/25)
-netLogoVersion       := "7.0.0-424b50b"
+netLogoVersion       := "7.0.0-2486d1e"
 netLogoPackageExtras ++= rScriptFiles.value.map( (f) => (f, None) )
 netLogoZipExtras     ++= Seq(baseDirectory.value / "demos", baseDirectory.value / "README.md")
 
@@ -41,10 +41,9 @@ Compile / packageBin / artifactPath := {
 )
 
 resolvers ++= Seq(
-  "netlogo-language-library" at "https://dl.cloudsmith.io/public/netlogo/language-library/maven",
-  "jitpack" at "https://jitpack.io"
+  "netlogo-language-library" at "https://dl.cloudsmith.io/public/netlogo/language-library/maven"
 )
 
 libraryDependencies ++= Seq(
-  "org.nlogo.languagelibrary" %% "language-library" % "3.3.2"
+  "org.nlogo.languagelibrary" %% "language-library" % "3.3.3-cfbf09b"
 )

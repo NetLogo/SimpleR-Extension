@@ -60,10 +60,10 @@ to go
     ;; get the results back from R
     let bb sr:runresult "fm$coefficient[1]"
     let xx sr:runresult "fm$coefficient[2]"
-    
+
     let b item 1 item 0 bb
     let x item 1 item 0 xx
-    
+
     ;; make a forecast for the next day
     let forecast b + x * 11
     if forecast < 0

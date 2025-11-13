@@ -56,7 +56,7 @@ to go
 
   ;; send agent variables into an R data-frame
   (sr:set-agent-data-frame "agentset" turtles "who" "xcor" "ycor")
-  
+
   ;; create point pattern with vectors of x- and y-coordinates of turtles and the dimension of the window/world
   let revalstring (word "agppp <- ppp(agentset$xcor, agentset$ycor, c(" min-pxcor "," max-pxcor "), c(" min-pycor "," max-pycor ") )")
 

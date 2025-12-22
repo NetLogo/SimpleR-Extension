@@ -23,7 +23,7 @@ scalaVersion := "3.7.0"
 Test / scalaSource    := baseDirectory.value / "test"
 Compile / scalaSource := baseDirectory.value / "src" / "main"
 
-scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-release", "11")
+scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-release", "17")
 
 Compile / packageBin / artifactPath := {
   val oldPath = (Compile / packageBin / artifactPath).value.toPath

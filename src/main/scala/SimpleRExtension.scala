@@ -86,7 +86,7 @@ object SimpleRExtension {
     val rRuntimePath = maybeRRuntimePath.getOrElse(
       throw new ExtensionException(s"We couldn't find an R executable file to run.  Please make sure R is installed on your system.  Then you can tell the ${SimpleRExtension.longName} where it's located by opening the SimplerR Extension menu and selecting Configure to choose the location yourself or putting making sure ${SimpleRExtension.extLangBin} is available on your PATH.\n")
     )
-    val rExtUserDirPath = FileIO.perUserDir(SimpleRExtension.codeName)
+    val rExtUserDirPath = FileIO.perUserExtensionDir(SimpleRExtension.codeName).toString
 
     try {
       // see docs in `rlibs.R` for what this is about

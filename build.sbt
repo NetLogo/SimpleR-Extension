@@ -3,7 +3,7 @@ import org.nlogo.build.{ ExtensionDocumentationPlugin, NetLogoExtension }
 enablePlugins(NetLogoExtension, ExtensionDocumentationPlugin)
 
 name       := "Simple R Extension"
-version    := "3.1.3"
+version    := "3.1.4"
 isSnapshot := true
 
 netLogoClassManager := "org.nlogo.extensions.simpler.SimpleRExtension"
@@ -14,7 +14,7 @@ lazy val rScriptFiles   = settingKey[Seq[File]]("list of R scripts to include in
 rScriptFiles := Seq(baseDirectory.value / "src" / "rext.R", baseDirectory.value / "src" / "rlibs.R")
 
 // This version number gets ignored.  The NL version comes from the Language Library.  --Jason B. (8/28/25)
-netLogoVersion       := "7.0.0-2486d1e"
+netLogoVersion       := "7.1.0-internal1-0194cd8"
 netLogoPackageExtras ++= rScriptFiles.value.map( (f) => (f, None) )
 netLogoZipExtras     ++= Seq(baseDirectory.value / "demos", baseDirectory.value / "README.md")
 

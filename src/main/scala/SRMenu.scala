@@ -73,7 +73,7 @@ class SRMenuGUI extends SRMenu {
                   new OptionPane(App.app.frame, I18N.gui.get("common.messages.warning"),
                                  """This model does not use the sr:setup primitive.
                                     You must call it before using any other Simple R primitives.""",
-                                 OptionPane.Options.Ok, OptionPane.Icons.Warning)
+                                 OptionPane.Options.Ok, OptionPane.Icons.warning)
                 }
               }
             }
